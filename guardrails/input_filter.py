@@ -45,7 +45,7 @@ FINANCIAL_SUBDOMAINS = {
         "mortgage", "debt", "credit risk", "credit scoring", "credit"
     ],
     "Capital Markets, Trading & Wealth": [
-        "trading", "trade", "algo", "algorithmic", "broker", "stock", "stocks",
+        "trading", "trade", "algo trading", "algo-trading", "algorithmic trading", "trading algo", "broker", "stock", "stocks",
         "equity", "equities", "share", "shares", "demat", "depository", "nsdl",
         "cdsl", "nse", "bse", "sebi", "derivative", "derivatives", "futures",
         "options", "fix protocol", "colocation", "order routing", "rms", "circuit breaker",

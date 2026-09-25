@@ -104,6 +104,21 @@ def main(data_dir: str = 'data') -> None:
         collection_name=COLLECTION_NAME,
         vectors_config=rest.VectorParams(size=vector_size, distance=rest.Distance.COSINE),
     )
+    # Ensure reciprocal alias so both 'documents' and 'finance_compliance_kb' resolve
+    alias_target = "finance_compliance_kb" if COLLECTION_NAME == "documents" else "documents"
+    try:
+        client.update_collection_aliases(
+            change_aliases_operations=[
+                rest.CreateAliasOperation(
+                    create_alias=rest.CreateAlias(
+                        collection_name=COLLECTION_NAME,
+                        alias_name=alias_target
+                    )
+                )
+            ]
+        )
+    except Exception:
+        pass
 
     ids = [doc['id'] for doc in chunked_docs]
     texts = [doc['text'] for doc in chunked_docs]

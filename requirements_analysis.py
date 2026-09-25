@@ -74,7 +74,7 @@ def _detect_financial_domain(text: str) -> str:
                 return True
         return False
 
-    if has_any(["trading", "stock", "stocks", "bse", "nse", "sebi", "equity", "equities", "derivative", "derivatives", "fix", "algo", "algorithmic", "demat", "margin", "rms", "market depth", "tick"]):
+    if has_any(["trading", "stock", "stocks", "bse", "nse", "sebi", "equity", "equities", "derivative", "derivatives", "fix", "algo trading", "algo-trading", "algorithmic trading", "trading algo", "demat", "margin", "rms", "market depth", "tick"]):
         return "trading"
     elif has_any(["loan", "lending", "credit", "cibil", "crif", "disbursal", "borrower", "microfinance", "shg", "farmer", "kfs", "apr", "nbfc", "dbt", "emi"]):
         return "lending"
@@ -979,7 +979,10 @@ def analyze_requirement(requirement_text: str, step_callback=None) -> Dict[str, 
             for c in rag_contexts if c.get("text")
         ])
     except Exception as exc:
-        print(f"[WARN] RAG retrieval notice: {exc}")
+        try:
+            print(f"[WARN] RAG retrieval notice: {exc}")
+        except OSError:
+            pass
 
     rag_hits_summary = []
     for c in rag_contexts:
@@ -999,7 +1002,10 @@ def analyze_requirement(requirement_text: str, step_callback=None) -> Dict[str, 
         from agents.extraction_agent import extract_system_architecture
         arch_data = extract_system_architecture(requirement_text, rag_context=rag_context_str)
     except Exception as exc:
-        print(f"[WARN] Extraction agent notice: {exc}")
+        try:
+            print(f"[WARN] Extraction agent notice: {exc}")
+        except OSError:
+            pass
         from agents.extraction_agent import _build_fallback_architecture
         arch_data = _build_fallback_architecture(requirement_text, rag_context_str)
 

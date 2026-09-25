@@ -34,25 +34,45 @@ def retrieve(query: str, top_k: int = 5) -> List[Dict]:
     The returned list contains the raw payloads stored in Qdrant, each
     payload includes the original ``text`` and any metadata (e.g. ``source``).
     """
-    # Encode the query (CPU‑only, same model used for ingestion)
-    query_vec = _model.encode([query])[0].tolist()
+    try:
+        # Encode the query (CPU‑only, same model used for ingestion)
+        query_vec = _model.encode([query])[0].tolist()
 
-    # Search in Qdrant
-    hits = _client.search(
-        collection_name=COLLECTION_NAME,
-        query_vector=query_vec,
-        limit=top_k,
-        score_threshold=None,
-    )
+        # Search in Qdrant with automatic collection fallback
+        target_collection = COLLECTION_NAME
+        try:
+            hits = _client.search(
+                collection_name=target_collection,
+                query_vector=query_vec,
+                limit=top_k,
+                score_threshold=None,
+            )
+        except Exception as search_err:
+            fallback_col = "documents" if target_collection != "documents" else "finance_compliance_kb"
+            try:
+                hits = _client.search(
+                    collection_name=fallback_col,
+                    query_vector=query_vec,
+                    limit=top_k,
+                    score_threshold=None,
+                )
+            except Exception:
+                raise search_err
 
-    # Extract payloads (payload is a dict we stored during ingestion)
-    results = []
-    for hit in hits:
-        payload = hit.payload or {}
-        payload.setdefault("score", hit.score)
-        payload.setdefault("citation", payload.get("filename", payload.get("source", "Regulatory KB")))
-        results.append(payload)
-    return results
+        # Extract payloads (payload is a dict we stored during ingestion)
+        results = []
+        for hit in hits:
+            payload = hit.payload or {}
+            payload.setdefault("score", hit.score)
+            payload.setdefault("citation", payload.get("filename", payload.get("source", "Regulatory KB")))
+            results.append(payload)
+        return results
+    except Exception as exc:
+        try:
+            print(f"[WARN] Qdrant retrieval error: {exc}", flush=True)
+        except OSError:
+            pass
+        return []
 
 
 if __name__ == "__main__":
