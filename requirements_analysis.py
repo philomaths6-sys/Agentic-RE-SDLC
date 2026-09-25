@@ -27,17 +27,8 @@ def is_conversational(text: str) -> bool:
     if cleaned in greetings:
         return True
 
-    domain_keywords = {
-        "upi", "payment", "kyc", "auth", "loan", "lending", "rbi", "npci", "aadhaar",
-        "dpdp", "sebi", "card", "bank", "srs", "requirement", "build", "create",
-        "app", "system", "api", "database", "security", "token", "mandate", "wallet",
-        "financial", "invest", "trading", "demat", "pmla", "account", "broker",
-        "disbursal", "borrower", "credit", "cibil", "pan", "v-cip", "ledger",
-        "microfinance", "shg", "farmer", "insurance", "fraud", "audit", "cscrf",
-        "atm", "cassette", "sensor", "iot", "switch", "vault"
-    }
-    words = set(re.findall(r"\b\w+\b", cleaned))
-    if len(words) <= 5 and not (words & domain_keywords):
+    # Common greeting prefixes (e.g. "hello assistant", "hey there")
+    if any(cleaned.startswith(g + " ") for g in ["hi", "hello", "hey", "good morning", "good evening"]):
         return True
 
     return False
@@ -963,7 +954,7 @@ def analyze_requirement(requirement_text: str, step_callback=None) -> Dict[str, 
         }
 
     if step_callback:
-        step_callback("Supervisor Agent", "Verified prompt against Zero-Trust safety & domain boundary filters; dispatched agent swarm.")
+        step_callback("Supervisor Agent", f"Affirmative Financial Domain Verified: Tagged as '{detected_category}'. Dispatched downstream specialist swarm.")
 
     # 2. Elicitation & Domain Intent
     domain_key = _detect_financial_domain(requirement_text)

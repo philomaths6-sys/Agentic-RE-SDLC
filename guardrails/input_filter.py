@@ -25,39 +25,60 @@ DISALLOWED_INPUT_PHRASES = {
     "jailbreak",
 }
 
-# Recognized Financial & FinTech Domain Keywords
-FINANCIAL_DOMAIN_KEYWORDS = {
-    # Banking & Accounts
-    "bank", "banking", "cbs", "account", "ledger", "deposit", "withdrawal",
-    "neft", "rtgs", "imps", "nach", "enach", "atm", "cash", "vault",
-    "passbook", "statement", "overdraft", "treasury", "swift",
-    # Payments & FinTech
-    "payment", "payments", "upi", "autopay", "mandate", "wallet", "pos",
-    "debit", "credit card", "debit card", "payment card", "rupay", "visa",
-    "mastercard", "qr", "merchant", "bbps", "tokenization",
-    "switch", "settlement", "clearing", "gateway", "remittance", "transaction",
-    # Lending & Credit
-    "loan", "lending", "borrower", "lender", "nbfc", "cibil", "crif",
-    "experian", "equifax", "underwriting", "disbursal", "repayment", "emi",
-    "kfs", "apr", "interest", "dbt", "microfinance", "shg", "collateral",
-    "mortgage", "debt",
-    # Investments & Capital Markets
-    "trading", "trade", "algo", "algorithmic", "broker", "stock", "stocks",
-    "equity", "equities", "share", "shares", "demat", "depository", "nsdl",
-    "cdsl", "nse", "bse", "sebi", "derivative", "derivatives", "futures",
-    "options", "fix", "colocation", "order routing", "rms", "circuit breaker",
-    "tick", "portfolio", "mutual fund", "sip", "amc", "nav",
-    # Insurance (Financial Domain)
-    "insurance", "policy", "premium", "claim", "claims", "underwrite", "tpa",
-    "irdai", "annuity", "coverage", "actuarial", "cashless", "indemnity",
-    "reimbursement", "billing",
-    # KYC & Identity in Finance
-    "kyc", "v-cip", "aadhaar", "uidai", "pan", "c-kyc", "ckyc", "data vault",
-    # Financial Crime, Audit & Regulators
-    "aml", "pmla", "str", "ctr", "fiu", "fiu-ind", "cscrf", "fraud",
-    "anti-money laundering", "sanction", "audit trail", "rbi", "npci",
-    "dpdp", "data localization", "data residency", "cert-in"
+# Recognized Financial & FinTech Domain Sub-domains and Keywords for Positive Affirmative Tagging
+FINANCIAL_SUBDOMAINS = {
+    "Payments, Switches & Mandates": [
+        "payment", "payments", "upi", "autopay", "mandate", "wallet", "pos",
+        "debit card", "credit card", "payment card", "rupay", "visa", "mastercard",
+        "qr", "merchant", "bbps", "tokenization", "switch", "settlement", "clearing",
+        "gateway", "remittance", "transaction", "checkout", "interbank", "coft", "payout"
+    ],
+    "Banking & Core Ledgers": [
+        "bank", "banking", "cbs", "core banking", "account", "ledger", "deposit", "withdrawal",
+        "neft", "rtgs", "imps", "nach", "enach", "atm", "cash", "vault", "cassette",
+        "passbook", "statement", "overdraft", "treasury", "swift", "reconciliation", "double-entry"
+    ],
+    "Lending, Credit & Underwriting": [
+        "loan", "lending", "borrower", "lender", "nbfc", "cibil", "crif",
+        "experian", "equifax", "underwriting", "disbursal", "repayment", "emi",
+        "kfs", "apr", "interest", "dbt", "microfinance", "shg", "collateral",
+        "mortgage", "debt", "credit risk", "credit scoring", "credit"
+    ],
+    "Capital Markets, Trading & Wealth": [
+        "trading", "trade", "algo", "algorithmic", "broker", "stock", "stocks",
+        "equity", "equities", "share", "shares", "demat", "depository", "nsdl",
+        "cdsl", "nse", "bse", "sebi", "derivative", "derivatives", "futures",
+        "options", "fix protocol", "colocation", "order routing", "rms", "circuit breaker",
+        "portfolio", "mutual fund", "sip", "amc", "nav", "hft"
+    ],
+    "Insurance & Actuarial Systems": [
+        "insurance", "policy", "premium", "claim", "claims", "underwrite", "tpa",
+        "irdai", "annuity", "coverage", "actuarial", "cashless", "indemnity",
+        "reimbursement", "solvency", "actuary"
+    ],
+    "Financial Identity, KYC & Statutory Governance": [
+        "kyc", "v-cip", "aadhaar", "uidai", "pan", "c-kyc", "ckyc", "data vault",
+        "aml", "pmla", "str", "ctr", "fiu", "fiu-ind", "cscrf", "fraud",
+        "anti-money laundering", "sanction", "audit trail", "rbi", "npci",
+        "dpdp", "data localization", "data residency", "cert-in", "ssdf", "vapt"
+    ]
 }
+
+# Flattened set for backward compatibility
+FINANCIAL_DOMAIN_KEYWORDS = set(
+    kw for sublist in FINANCIAL_SUBDOMAINS.values() for kw in sublist
+)
+
+
+def classify_financial_domain(text: str) -> list:
+    """Inspect text and return all affirmative financial domain tags that match."""
+    lowered = text.lower()
+    matched_tags = []
+    for domain, kws in FINANCIAL_SUBDOMAINS.items():
+        if any(re.search(r"\b" + re.escape(kw) + r"\b", lowered) for kw in kws):
+            matched_tags.append(domain)
+    return matched_tags
+
 
 # Out-of-domain categories and detection rules
 OUT_OF_DOMAIN_CATEGORIES = [
@@ -164,26 +185,40 @@ def is_safe(text: str) -> bool:
 
 
 def check_domain_scope(text: str) -> Tuple[bool, str, str]:
-    """Evaluate whether the user prompt falls within the financial engineering scope.
-
+    """Affirmative Positive Domain Tagging & Scope Evaluation.
+    
+    The Supervisor Agent evaluates whether the user prompt affirmatively carries
+    at least one verified financial engineering domain tag (Banking, Payments, Lending,
+    Trading, Insurance, KYC/Compliance).
+    
     Returns:
-        (is_in_domain: bool, detected_category: str, clarification: str)
+        (is_in_domain: bool, detected_category_or_tag: str, clarification: str)
     """
     lowered = text.lower()
+    matched_tags = classify_financial_domain(text)
 
-    # 1. Evaluate out-of-domain categories
+    # 1. Evaluate explicit out-of-domain categories
     for cat in OUT_OF_DOMAIN_CATEGORIES:
         has_cat_match = any(re.search(pat, lowered) for pat in cat["patterns"])
         if has_cat_match:
-            # Check if an explicit financial exception or qualifier is present
+            # Check if an explicit financial exception is present
             has_exception = any(exc in lowered for exc in cat["allowed_exceptions"])
-            has_financial_keyword = any(
-                re.search(r"\b" + re.escape(kw) + r"\b", lowered)
-                for kw in FINANCIAL_DOMAIN_KEYWORDS
-            )
+            if has_exception or matched_tags:
+                primary = matched_tags[0] if matched_tags else "Regulated FinTech Component"
+                return True, f"{primary} ({cat['category']} integration)", ""
+            return False, cat["category"], cat["clarification"]
 
-            if not has_exception and not has_financial_keyword:
-                return False, cat["category"], cat["clarification"]
+    # 2. Positive Affirmative Domain Check (Zero-Trust Gating)
+    # The query must affirmatively carry at least one financial sub-domain tag.
+    if matched_tags:
+        return True, matched_tags[0], ""
 
-    # 2. If no non-financial pattern is triggered, allow general architectural / financial prompts
-    return True, "Regulated Financial Domain", ""
+    # 3. Intercept non-financial / untagged prompts
+    clarification = (
+        "The Supervisor Agent detected 0 financial domain tags in this request. "
+        "The platform specializes strictly in Indian Regulated Financial Infrastructure "
+        "(RBI, SEBI, NPCI, UIDAI, IRDAI, and DPDP Act 2023). "
+        "Please specify the digital payment, banking ledger, loan origination, trading, "
+        "insurance claim, or KYC compliance scope of your project."
+    )
+    return False, "Non-Financial / General Domain", clarification
