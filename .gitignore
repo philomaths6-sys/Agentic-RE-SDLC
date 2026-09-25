@@ -1,0 +1,27 @@
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Binaries & Large Runtimes
+qdrant
+storage/
+.qdrant-initialized
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Local Environment & Secrets
+.env
+.streamlit/secrets.toml
+
+# OS & Editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~

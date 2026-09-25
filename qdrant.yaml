@@ -1,0 +1,11 @@
+service:
+  http:
+    address: 0.0.0.0
+    port: 6333
+  grpc:
+    address: 0.0.0.0
+    port: 6334
+storage:
+  location: ./qdrant_storage
+optimizers:
+  memmap_threshold: 1000000
