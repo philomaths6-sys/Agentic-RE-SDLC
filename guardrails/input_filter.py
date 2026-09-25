@@ -88,13 +88,44 @@ OUT_OF_DOMAIN_CATEGORIES = [
         "clarification": "General gaming engines, entertainment streaming, and esports mechanics are outside the financial engineering domain."
     },
     {
-        "category": "Food, Recipes & Culinary",
+        "category": "Food, Delivery & Culinary",
         "patterns": [
-            r"\brecipe\b", r"\bcooking\b", r"\bmeal\s*planner\b", r"\brestaurant\s*menu\b",
-            r"\bchef\b", r"\bingredient\b", r"\bdiet\s*tracker\b"
+            r"\brecipe\b", r"\bcooking\b", r"\bmeal\s*planner\b", r"\brestaurant\b",
+            r"\bchef\b", r"\bingredient\b", r"\bdiet\s*tracker\b", r"\bpizza\b",
+            r"\bfood\s*deliver(y|ing)?\b", r"\bfood\s*order(ing)?\b", r"\bkitchen\b",
+            r"\bmenu\s*item\b", r"\bbakery\b", r"\bgrocery\s*deliver(y|ing)?\b",
+            r"\bswiggy\b", r"\bzomato\b", r"\bdomino\'?s?\b", r"\bcatering\b",
+            r"\btakeaway\b", r"\btakeout\b"
         ],
-        "allowed_exceptions": ["payment", "billing", "pos", "checkout", "order payment"],
-        "clarification": "General culinary, recipe sharing, and kitchen management systems are outside the financial domain."
+        "allowed_exceptions": ["payment", "billing", "pos", "checkout", "order payment", "payment gateway", "settlement", "refund", "wallet", "upi"],
+        "clarification": "General food delivery, pizza ordering, culinary, and kitchen management systems are outside the financial engineering domain. If you are building the digital payment checkout or merchant settlement switch for this service, please specify the financial requirements."
+    },
+    {
+        "category": "Ride Hailing & Transport Logistics",
+        "patterns": [
+            r"\bcab\s*booking\b", r"\btaxi\s*app\b", r"\bride\s*sharing\b", r"\bbike\s*taxi\b",
+            r"\buber\b", r"\bola\b", r"\brapido\b", r"\bcarpool\b", r"\bfleet\s*dispatch\b"
+        ],
+        "allowed_exceptions": ["fare payment", "driver payout", "wallet", "upi", "card tokenization", "payment gateway", "toll payment"],
+        "clarification": "Ride hailing, vehicle dispatch, and driver GPS navigation are outside the financial domain. Include payment gateway or driver payout details if designing the financial subsystem."
+    },
+    {
+        "category": "Hotels & Hospitality Accommodation",
+        "patterns": [
+            r"\bhotel\s*booking\b", r"\broom\s*reservation\b", r"\bhostel\s*booking\b",
+            r"\bairbnb\b", r"\bhotel\s*management\b", r"\bguest\s*check-?in\b"
+        ],
+        "allowed_exceptions": ["booking payment", "advance deposit", "card tokenization", "refund switch", "payment"],
+        "clarification": "Hotel room inventory, housekeeping, and front-desk booking engines are outside the financial domain."
+    },
+    {
+        "category": "General E-Commerce & Retail Goods",
+        "patterns": [
+            r"\bclothing\s*store\b", r"\bfashion\s*app\b", r"\bfurniture\s*store\b",
+            r"\bshoe\s*store\b", r"\bapparel\b", r"\bjewelry\s*shop\b"
+        ],
+        "allowed_exceptions": ["payment gateway", "card-on-file", "tokenization", "bnpl", "checkout", "emi", "refund", "upi"],
+        "clarification": "General apparel, furniture, and retail merchandise catalogs are outside the financial domain. Specify payment gateway or checkout tokenization if designing the financial component."
     },
     {
         "category": "Academic & School Administration",
