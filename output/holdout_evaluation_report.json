@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-09-25 15:05:21",
+  "hardware": {
+    "device": "NVIDIA GeForce RTX 3050 Laptop GPU (6GB)",
+    "memory": {
+      "ram_mb": 2082.1,
+      "vram_mb": 2124.0,
+      "vram_peak_mb": 2198.7
+    }
+  },
+  "extraction_benchmark": {
+    "agent": "extraction",
+    "sample_count": 5,
+    "base_model": {
+      "raw_json_valid_pct": 20.0,
+      "schema_compliance_pct": 0.0,
+      "moscow_accuracy_pct": 0.0,
+      "citation_grounding_pct": 0.0,
+      "avg_latency_ms": 8125.3,
+      "avg_tok_per_sec": 34.2
+    },
+    "finetuned_adapter": {
+      "raw_json_valid_pct": 60.0,
+      "schema_compliance_pct": 60.0,
+      "moscow_accuracy_pct": 20.0,
+      "citation_grounding_pct": 60.0,
+      "avg_latency_ms": 12986.8,
+      "avg_tok_per_sec": 24.1
+    }
+  },
+  "sdlc_benchmark": {
+    "agent": "sdlc",
+    "sample_count": 5,
+    "base_model": {
+      "raw_json_valid_pct": 80.0,
+      "schema_compliance_pct": 80.0,
+      "sdlc_agreement_pct": 0.0,
+      "alternatives_structured_pct": 80.0,
+      "avg_latency_ms": 5660.4,
+      "avg_tok_per_sec": 33.7
+    },
+    "finetuned_adapter": {
+      "raw_json_valid_pct": 100.0,
+      "schema_compliance_pct": 100.0,
+      "sdlc_agreement_pct": 80.0,
+      "alternatives_structured_pct": 100.0,
+      "avg_latency_ms": 9116.0,
+      "avg_tok_per_sec": 23.9
+    }
+  }
+}
