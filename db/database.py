@@ -111,6 +111,35 @@ class SessionStateRecord(Base):
     session = relationship("ChatSession", back_populates="state")
 
 
+class AuditLog(Base):
+    __tablename__ = "audit_log"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    actor_email = Column(String(255), nullable=False)
+    action = Column(String(100), nullable=False, index=True)
+    session_id = Column(String(64), nullable=True, index=True)
+    payload = Column(JSONB, nullable=True)
+    requirement_version = Column(String(50), nullable=True, default="1.0")
+    model_version = Column(String(100), nullable=True, default="Qwen-2.5-3B-LoRA")
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class GateDecision(Base):
+    __tablename__ = "gate_decisions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(64), nullable=True, index=True)
+    gate_name = Column(String(50), nullable=False)
+    decision = Column(String(20), nullable=False)
+    reviewer_id = Column(Integer, nullable=True)
+    reviewer_email = Column(String(255), nullable=False)
+    reviewer_role = Column(String(100), nullable=False)
+    rationale = Column(Text, nullable=True)
+    model_name = Column(String(100), nullable=True)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 # ---------------------------------------------------------------------------
 # Initialization & Seed
 # ---------------------------------------------------------------------------
@@ -303,3 +332,147 @@ def delete_chat_session(session_id: str, user_id: int) -> bool:
             db.commit()
             return True
         return False
+
+
+# ---------------------------------------------------------------------------
+# Append-Only Audit Trail & Stage-Gate Decision Governance API
+# ---------------------------------------------------------------------------
+def record_audit_log(
+    actor_email: str,
+    action: str,
+    payload: Optional[Dict[str, Any]] = None,
+    session_id: Optional[str] = None,
+    user_id: Optional[int] = None,
+    requirement_version: str = "1.0",
+    model_version: str = "Qwen-2.5-3B-LoRA"
+) -> Dict[str, Any]:
+    """Append-only immutable audit trail record."""
+    now = datetime.now(timezone.utc)
+    with SessionLocal() as db:
+        log_entry = AuditLog(
+            user_id=user_id,
+            actor_email=actor_email,
+            action=action,
+            session_id=session_id,
+            payload=payload or {},
+            requirement_version=requirement_version,
+            model_version=model_version,
+            timestamp=now
+        )
+        db.add(log_entry)
+        db.commit()
+        db.refresh(log_entry)
+        return {
+            "id": log_entry.id,
+            "actor_email": log_entry.actor_email,
+            "action": log_entry.action,
+            "session_id": log_entry.session_id,
+            "requirement_version": log_entry.requirement_version,
+            "model_version": log_entry.model_version,
+            "timestamp": log_entry.timestamp.isoformat()
+        }
+
+
+def record_gate_decision(
+    session_id: str,
+    gate_name: str,
+    decision: str,
+    reviewer_email: str,
+    reviewer_role: str,
+    reviewer_id: Optional[int] = None,
+    rationale: str = "",
+    model_name: str = ""
+) -> Dict[str, Any]:
+    """Record a formal stage-gate decision with verified reviewer identity."""
+    now = datetime.now(timezone.utc)
+    with SessionLocal() as db:
+        gate_entry = GateDecision(
+            session_id=session_id,
+            gate_name=gate_name,
+            decision=decision,
+            reviewer_id=reviewer_id,
+            reviewer_email=reviewer_email,
+            reviewer_role=reviewer_role,
+            rationale=rationale,
+            model_name=model_name,
+            timestamp=now
+        )
+        db.add(gate_entry)
+
+        # Also write to append-only audit_log
+        audit_entry = AuditLog(
+            user_id=reviewer_id,
+            actor_email=reviewer_email,
+            action=f"STAGE_GATE_{gate_name}_{decision}",
+            session_id=session_id,
+            payload={
+                "gate_name": gate_name,
+                "decision": decision,
+                "reviewer_email": reviewer_email,
+                "reviewer_role": reviewer_role,
+                "rationale": rationale,
+                "model_name": model_name
+            },
+            requirement_version="1.0",
+            model_version="Qwen-2.5-3B-LoRA",
+            timestamp=now
+        )
+        db.add(audit_entry)
+        db.commit()
+        db.refresh(gate_entry)
+        return {
+            "id": gate_entry.id,
+            "session_id": gate_entry.session_id,
+            "gate_name": gate_entry.gate_name,
+            "decision": gate_entry.decision,
+            "reviewer_email": gate_entry.reviewer_email,
+            "reviewer_role": gate_entry.reviewer_role,
+            "rationale": gate_entry.rationale,
+            "timestamp": gate_entry.timestamp.isoformat()
+        }
+
+
+def get_audit_logs(session_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    """Query immutable audit log entries."""
+    with SessionLocal() as db:
+        q = db.query(AuditLog)
+        if session_id:
+            q = q.filter(AuditLog.session_id == session_id)
+        entries = q.order_by(AuditLog.timestamp.desc()).limit(limit).all()
+        return [
+            {
+                "id": e.id,
+                "actor_email": e.actor_email,
+                "action": e.action,
+                "session_id": e.session_id,
+                "payload": e.payload,
+                "requirement_version": e.requirement_version,
+                "model_version": e.model_version,
+                "timestamp": e.timestamp.isoformat() if e.timestamp else ""
+            }
+            for e in entries
+        ]
+
+
+def get_gate_decisions(session_id: str) -> List[Dict[str, Any]]:
+    """Retrieve all gate decisions for a session."""
+    with SessionLocal() as db:
+        decisions = (
+            db.query(GateDecision)
+            .filter(GateDecision.session_id == session_id)
+            .order_by(GateDecision.timestamp.asc())
+            .all()
+        )
+        return [
+            {
+                "id": d.id,
+                "gate_name": d.gate_name,
+                "decision": d.decision,
+                "reviewer_email": d.reviewer_email,
+                "reviewer_role": d.reviewer_role,
+                "rationale": d.rationale,
+                "model_name": d.model_name,
+                "timestamp": d.timestamp.isoformat() if d.timestamp else ""
+            }
+            for d in decisions
+        ]

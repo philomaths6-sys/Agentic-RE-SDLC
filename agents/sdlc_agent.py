@@ -21,40 +21,353 @@ from guardrails.output_filter import filter_output
 from agents.model_manager import get_sdlc_model
 
 
-def recommend_sdlc_structured(requirement: str, rag_context: str = "") -> Dict[str, Any]:
-    """Generate a structured SDLC recommendation dict for the given requirement.
+def _models_agree(m1: str, m2: str) -> bool:
+    """Check if two SDLC model names belong to the same architectural family."""
+    if not m1 or not m2:
+        return False
+    m1_low = m1.lower().replace("-", " ").replace("/", " ")
+    m2_low = m2.lower().replace("-", " ").replace("/", " ")
+    if m1_low == m2_low:
+        return True
+    families = [
+        {"v model", "v model with devsecops gates", "vmodel", "v model with devsecops"},
+        {"waterfall", "waterfall staged gate", "staged gate", "waterfall / staged gate", "waterfall / staged-gate", "waterfall / stage gate", "waterfall / stage-gate"},
+        {"agile devsecops hybrid", "agile devsecops", "agile", "dual track agile", "agile devops", "extreme programming", "xp"},
+        {"prototyping model", "prototyping", "iterative model", "iterative", "prototyping / iterative", "prototyping model / iterative pilot"},
+        {"spiral model", "spiral"},
+        {"incremental model", "incremental", "incremental / staged"},
+        {"rad", "rapid application development"}
+    ]
+    for fam in families:
+        in_m1 = any(f in m1_low for f in fam)
+        in_m2 = any(f in m2_low for f in fam)
+        if in_m1 and in_m2:
+            return True
+    return False
 
-    Returns a dict with keys:
-        recommended_model, reasoning, alternatives_considered
+
+def evaluate_sdlc_decision_matrix(
+    requirement: str,
+    risk_info: Dict[str, Any] = None,
+    domain: str = None
+) -> Dict[str, Any]:
+    """Transparent multi-factor statutory decision matrix for Indian financial systems.
+    Evaluates:
+      1. Physical Hardware & Cryptographic HSM (ATM cash cassettes, vault reed sensors, EPP, zeroization)
+      2. Sub-millisecond Colocation & Algorithmic Trading (FIX protocol, matching engine, pre-trade RMS)
+      3. Regulatory Sandbox & Synthetic Money Pilots (Exploratory POC, test cohorts)
+      4. Core Systemic Banking Ledger Migrations (CBS, double-entry general ledger, RTGS)
+      5. Insurance Core & Actuarial Solvency (IRDAI, risk modeling, reinsurance)
+      6. Regulatory Compliance Surveillance & AML (PMLA 2002, FIU-IND STR/CTR reporting)
+      7. High-Velocity Consumer FinTech & Payments (UPI AutoPay, recurring mandates, mobile wallets)
+      8. Calibrated Risk Score Thresholds
+    """
+    t = requirement.lower()
+
+    # Step 0: Check if input contains financial software engineering context
+    has_financial_context = any(k in t for k in [
+        "bank", "pay", "fund", "money", "card", "atm", "hsm", "sensor", "reed",
+        "cassette", "switch", "settle", "ledger", "account", "cbs", "upi", "rbi",
+        "sebi", "irdai", "fiu", "pmla", "mandate", "trading", "broker", "demat",
+        "order", "exchange", "risk", "crypto", "token", "loan", "lending",
+        "credit", "fraud", "surveillance", "kyc", "identity", "transaction",
+        "clearing", "fintech", "insurance", "policy", "premium", "claim", "actuarial"
+    ])
+
+    risk_score = 70
+    if risk_info and isinstance(risk_info, dict):
+        risk_score = risk_info.get("risk_score_pct", 70)
+
+    factors = {
+        "has_hardware_hsm": any(k in t for k in [
+            "atm", "vault", "cash cassette", "cassette dispenser", "reed sensor",
+            "tilt sensor", "tamper", "zeroization", "pin pad", "epp", "fips 140",
+            "hardware security module", "smart card reader"
+        ]),
+        "has_colocation_algo": any(k in t for k in [
+            "colocation", "colo", "sub-millisecond", "fix 4.", "fix 5.", "matching engine",
+            "algo trading", "algorithmic trading", "level-2", "level-3", "order book depth",
+            "tick-to-trade", "pre-trade risk"
+        ]),
+        "is_sandbox_pilot": any(k in t for k in [
+            "regulatory sandbox", "sandbox cohort", "sandbox pilot", "proof of concept",
+            "poc", "synthetic money", "mock simulator", "pilot cohort", "pilot trial", "paper trading"
+        ]),
+        "is_core_banking": any(k in t for k in [
+            "core banking", "cbs", "general ledger", "double-entry", "chart of accounts",
+            "rtgs settlement switch", "neft settlement engine"
+        ]),
+        "is_insurance": any(k in t for k in [
+            "irdai", "insurance policy", "underwriting", "claim settlement", "actuarial",
+            "solvency margin", "tpa integration", "reinsurance", "insurance"
+        ]),
+        "is_aml_compliance": any(k in t for k in [
+            "pmla", "fiu-ind", "fiu", "str reporting", "ctr reporting", "anti-money laundering",
+            "aml surveillance", "sanctions screening", "pep check"
+        ]),
+        "is_consumer_payments": any(k in t for k in [
+            "upi", "autopay", "recurring mandate", "payment gateway", "bbps",
+            "merchant settlement", "qr code", "mobile wallet", "card tokenization"
+        ]),
+        "risk_score": risk_score,
+        "domain": domain or "general"
+    }
+
+    # Strict Zero-Silent-Default: Reject out-of-domain or non-financial inputs
+    if not has_financial_context or len(t.strip()) < 15:
+        return {
+            "matrix_model": "Could Not Determine",
+            "confidence": 0.0,
+            "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+            "decision_factors": factors,
+            "matrix_reasoning": (
+                "The provided text lacks financial domain architecture keywords or statutory directives. "
+                "The SDLC decision matrix cannot determine a software lifecycle without system architectural context."
+            ),
+            "matrix_alternatives": []
+        }
+
+    # 1. Hardware / ATM / Physical Tamper / FIPS HSM
+    if factors["has_hardware_hsm"]:
+        return {
+            "matrix_model": "V-Model with DevSecOps Gates",
+            "confidence": 0.95,
+            "rule_id": "DM-RULE-01-HARDWARE-ATM",
+            "decision_factors": factors,
+            "matrix_reasoning": (
+                "Physical hardware devices (ATM cash cassettes, vault reed sensors, EPP PIN pads) "
+                "and cryptographic key zeroization require formal hardware-in-the-loop (HIL) testing, "
+                "pre-production factory acceptance testing (FAT), and sequential verification gates that "
+                "cannot be refactored like pure software in agile sprints."
+            ),
+            "matrix_alternatives": [
+                {"model": "Agile-DevSecOps Hybrid", "why_not": "Hardware sensor fabrication, physical calibration, and tamper zeroization circuits cannot be iteratively changed mid-sprint."},
+                {"model": "Waterfall", "why_not": "Pure Waterfall lacks automated firmware vulnerability scanning and DevSecOps gates mandated by RBI ATM security guidelines."}
+            ]
+        }
+
+    # 2. Sub-millisecond Colocation & Algo Gateway
+    if factors["has_colocation_algo"]:
+        return {
+            "matrix_model": "V-Model with DevSecOps Gates",
+            "confidence": 0.94,
+            "rule_id": "DM-RULE-02-ALGO-COLOCATION",
+            "decision_factors": factors,
+            "matrix_reasoning": (
+                "Colocation algorithmic execution engines interfacing directly with exchange matching engines "
+                "carry severe financial loss potential per microsecond. SEBI CSCRF directives mandate "
+                "bilateral exchange mock certification and formal pre-trade risk management verification gates."
+            ),
+            "matrix_alternatives": [
+                {"model": "Waterfall", "why_not": "Exchange API updates and circuit breaker configurations require continuous automated regression gates rather than static upfront documentation."},
+                {"model": "Prototyping Model", "why_not": "Live market trading with capital exposure cannot tolerate throwaway prototype architecture."}
+            ]
+        }
+
+    # 3. Regulatory Sandbox Pilot / Synthetic Money POC
+    if factors["is_sandbox_pilot"]:
+        return {
+            "matrix_model": "Prototyping Model",
+            "confidence": 0.95,
+            "rule_id": "DM-RULE-03-SANDBOX-POC",
+            "decision_factors": factors,
+            "matrix_reasoning": (
+                "Regulatory sandbox cohorts operating with synthetic capital and capped participant limits "
+                "are exploratory by definition. Rapid prototyping enables customer validation loops and "
+                "regulatory feedback before applying for commercial production licensing."
+            ),
+            "matrix_alternatives": [
+                {"model": "Waterfall", "why_not": "Statutory sandbox requirements are exploratory and evolve based on cohort test feedback."},
+                {"model": "V-Model", "why_not": "Full V-Model verification overhead is disproportionate for synthetic-money sandbox trials."}
+            ]
+        }
+
+    # 4. Core Systemic Banking Ledger / CBS Migration
+    if factors["is_core_banking"]:
+        return {
+            "matrix_model": "Waterfall / Staged-Gate",
+            "confidence": 0.93,
+            "rule_id": "DM-RULE-04-CORE-BANKING",
+            "decision_factors": factors,
+            "matrix_reasoning": (
+                "Core banking general ledger migrations carry irreversible financial accounting risk. "
+                "Chart-of-accounts schemas, balance carryforwards, and double-entry invariants must be "
+                "completely specified, verified, and audited upfront prior to cutover."
+            ),
+            "matrix_alternatives": [
+                {"model": "Agile-DevSecOps Hybrid", "why_not": "Ledger atomicity, regulatory audit schemas, and statutory chart of accounts cannot be iteratively altered mid-migration."},
+                {"model": "RAD", "why_not": "Rapid application development bypasses formal data reconciliation and parallel-run audit gates."}
+            ]
+        }
+
+    # 5. Insurance Core & Solvency Modeling
+    if factors["is_insurance"]:
+        is_actuarial_core = any(k in t for k in [
+            "actuarial", "solvency", "reinsurance", "underwriting", "policy administration",
+            "statutory reserve", "ibnr", "alm"
+        ])
+        if is_actuarial_core:
+            return {
+                "matrix_model": "Waterfall / Staged-Gate",
+                "confidence": 0.90,
+                "rule_id": "DM-RULE-05A-INSURANCE-ACTUARIAL-CORE",
+                "decision_factors": factors,
+                "matrix_reasoning": (
+                    "Insurance core policy administration, actuarial valuation, and statutory solvency margins "
+                    "involve binding capital adequacy models governed by IRDAI requiring sequential verification stage-gates."
+                ),
+                "matrix_alternatives": [
+                    {"model": "Agile", "why_not": "Actuarial valuation models and solvency margin formulas require formal stage-gate certification before filing with IRDAI."}
+                ]
+            }
+        else:
+            return {
+                "matrix_model": "Agile-DevSecOps Hybrid",
+                "confidence": 0.91,
+                "rule_id": "DM-RULE-05B-INSURANCE-DIGITAL-PORTAL",
+                "decision_factors": factors,
+                "matrix_reasoning": (
+                    "Insurance customer portals, digital aggregators, and claims adjudication workflows "
+                    "benefit from iterative sprint delivery with automated DevSecOps and NHCX gateway integration."
+                ),
+                "matrix_alternatives": [
+                    {"model": "Waterfall", "why_not": "Customer experience and third-party API integrations require agile iteration."}
+                ]
+            }
+
+    # 6. Regulatory Compliance & AML / FIU-IND Reporting
+    if factors["is_aml_compliance"]:
+        return {
+            "matrix_model": "Agile-DevSecOps Hybrid",
+            "confidence": 0.92,
+            "rule_id": "DM-RULE-06-AML-COMPLIANCE",
+            "decision_factors": factors,
+            "matrix_reasoning": (
+                "Anti-Money Laundering (AML) and FIU-IND compliance systems operate on streaming event data (CEP/Kafka). "
+                "Rapidly evolving financial crime typologies necessitate bi-weekly sprint iterations paired with continuous "
+                "DevSecOps pipelines enforcing anti-tipping-off security guardrails and XML schema validation."
+            ),
+            "matrix_alternatives": [
+                {"model": "Waterfall", "why_not": "Static waterfall cycles cannot adapt to newly emerging mule account typologies or FATF sanctions updates."},
+                {"model": "Prototyping Model", "why_not": "Statutory reporting requires production-grade XML schema fidelity rather than disposable prototypes."}
+            ]
+        }
+
+    # 7. High-Velocity Consumer FinTech & Payments
+    if factors["is_consumer_payments"]:
+        return {
+            "matrix_model": "Agile-DevSecOps Hybrid",
+            "confidence": 0.94,
+            "rule_id": "DM-RULE-07-PAYMENTS-FINTECH",
+            "decision_factors": factors,
+            "matrix_reasoning": (
+                "Consumer payment applications governed by NPCI and RBI circulars require iterative sprint "
+                "delivery for rapid feature adoption, coupled with continuous automated DevSecOps pipelines "
+                "(SAST, DAST, SCA, dependency scanning, dynamic linking verification) at every commit boundary."
+            ),
+            "matrix_alternatives": [
+                {"model": "Waterfall", "why_not": "Frequent NPCI circular addenda (e.g. MyUPI, Tap-and-Pay, Numeric UPI ID) make rigid upfront specifications obsolete."},
+                {"model": "V-Model", "why_not": "Pure V-Model phase-gating delays feature delivery in competitive consumer payment ecosystems."}
+            ]
+        }
+
+    # 8. General Financial Architecture Fallbacks
+    if risk_score >= 85:
+        return {
+            "matrix_model": "V-Model with DevSecOps Gates",
+            "confidence": 0.85,
+            "rule_id": "DM-RULE-08-HIGH-RISK-FINANCIAL",
+            "decision_factors": factors,
+            "matrix_reasoning": "High statutory risk score (>85%) mandates formal verification stage-gates with DevSecOps automation.",
+            "matrix_alternatives": [
+                {"model": "Agile", "why_not": "Pure agile lacks required formal verification gates for critical tier systems."}
+            ]
+        }
+    else:
+        return {
+            "matrix_model": "Agile-DevSecOps Hybrid",
+            "confidence": 0.85,
+            "rule_id": "DM-RULE-09-STANDARD-FINANCIAL",
+            "decision_factors": factors,
+            "matrix_reasoning": "Standard financial architecture requirement suitable for iterative DevSecOps delivery.",
+            "matrix_alternatives": [
+                {"model": "Waterfall", "why_not": "Slow release cadence hampers regulatory responsiveness."}
+            ]
+        }
+
+
+def recommend_sdlc_structured(
+    requirement: str,
+    rag_context: str = "",
+    risk_info: Dict[str, Any] = None,
+    domain: str = None,
+    *args,
+    **kwargs
+) -> Dict[str, Any]:
+    """Generate a calibrated SDLC recommendation using an ensemble of the transparent
+    statutory decision matrix and the fine-tuned LoRA model. Never defaults silently.
     """
     if not input_is_safe(requirement):
-        raise ValueError("Input rejected by guardrails.")
+        return {
+            "recommended_model": "Could Not Determine",
+            "confidence": 0.0,
+            "confidence_tier": "Low",
+            "source": "GUARDRAILS_REJECTED",
+            "reasoning": "Input rejected by Zero-Trust security filter (prompt injection or prohibited command).",
+            "alternatives_considered": [],
+            "decision_matrix_rule": "DM-RULE-GUARDRAIL-REJECTED",
+            "decision_factors": {}
+        }
 
-    tokenizer, model = get_sdlc_model()
+    # Step 1: Evaluate Transparent Statutory Decision Matrix Baseline
+    matrix_res = evaluate_sdlc_decision_matrix(requirement, risk_info=risk_info, domain=domain)
+    matrix_model = matrix_res["matrix_model"]
+    matrix_conf = matrix_res["confidence"]
 
-    system_prompt = (
-        "You are the SDLC Recommendation Agent for Indian financial institutions regulated by RBI, NPCI, UIDAI, SEBI, and DPDP Act 2023. "
-        "Analyze the given requirement and recommend the optimal SDLC model. "
-        "Explain WHY this model fits and list alternatives you considered but rejected with clear reasons. "
-        "Output ONLY valid JSON."
-    )
+    # If the decision matrix explicitly rejected out-of-domain/adversarial text, do not let LLM hallucinate
+    if matrix_model == "Could Not Determine":
+        return {
+            "recommended_model": "Could Not Determine",
+            "confidence": 0.0,
+            "confidence_tier": "Low",
+            "source": "UNDETERMINED_OUT_OF_DOMAIN",
+            "reasoning": (
+                "Could not determine an SDLC model: the input lacks financial software engineering context, "
+                "or contains out-of-domain/adversarial content. Manual architect review required."
+            ),
+            "alternatives_considered": [],
+            "decision_matrix_rule": matrix_res.get("rule_id", "DM-RULE-UNDETERMINED"),
+            "decision_factors": matrix_res.get("decision_factors", {})
+        }
 
-    # Retrieve dedicated SDLC regulatory governance context from Qdrant
-    sdlc_context = ""
+    # Step 2: Query Fine-Tuned SDLC LoRA Model
+    llm_res = None
+    llm_err = None
     try:
-        from rag.retriever import retrieve
-        hits = retrieve(f"regulatory SDLC lifecycle model applicability {requirement[:100]}", top_k=3)
-        sdlc_context = "\n\n".join([
-            f"[{h.get('citation', 'SDLC Governance')}]:\n{h.get('text', '').strip()[:450]}"
-            for h in hits if h.get("text")
-        ])
-    except Exception as exc:
-        pass
+        tokenizer, model = get_sdlc_model()
 
-    combined_rag = f"{rag_context}\n\n{sdlc_context}".strip()
-    rag_section = f"\n\nApplicable Regulatory & SDLC Governance Directives:\n{combined_rag[:1200]}" if combined_rag else ""
+        system_prompt = (
+            "You are the SDLC Recommendation Agent for Indian financial institutions regulated by RBI, NPCI, UIDAI, SEBI, and DPDP Act 2023. "
+            "Analyze the given requirement and recommend the optimal SDLC model. "
+            "Explain WHY this model fits and list alternatives you considered but rejected with clear reasons. "
+            "Output ONLY valid JSON."
+        )
 
-    user_prompt = f"""Analyze this requirement and recommend the best SDLC model. Explain your reasoning and why you rejected alternatives:
+        sdlc_context = ""
+        try:
+            from rag.retriever import retrieve
+            hits = retrieve(f"regulatory SDLC lifecycle model applicability {requirement[:100]}", top_k=3)
+            sdlc_context = "\n\n".join([
+                f"[{h.get('citation', 'SDLC Governance')}]:\n{h.get('text', '').strip()[:450]}"
+                for h in hits if h.get("text")
+            ])
+        except Exception:
+            pass
+
+        combined_rag = f"{rag_context}\n\n{sdlc_context}".strip()
+        rag_section = f"\n\nApplicable Regulatory & SDLC Governance Directives:\n{combined_rag[:1200]}" if combined_rag else ""
+
+        user_prompt = f"""Analyze this requirement and recommend the best SDLC model. Explain your reasoning and why you rejected alternatives:
 
 Requirement:
 \"{requirement[:2000]}\"
@@ -70,73 +383,154 @@ Output ONLY valid JSON in this exact structure:
   ]
 }}"""
 
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt},
-    ]
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
 
-    prompt_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = tokenizer(prompt_text, return_tensors="pt").to("cuda")
+        prompt_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        inputs = tokenizer(prompt_text, return_tensors="pt").to("cuda")
 
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=500,
-            do_sample=False,
-            repetition_penalty=1.15,
-            pad_token_id=tokenizer.eos_token_id,
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=500,
+                do_sample=False,
+                repetition_penalty=1.15,
+                pad_token_id=tokenizer.eos_token_id,
+            )
+
+        response_text = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True).strip()
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        allowed, cleaned, reason = filter_output(response_text)
+        if allowed:
+            llm_res = _parse_sdlc_json(cleaned)
+        else:
+            llm_err = f"Output filter: {reason}"
+    except Exception as exc:
+        llm_err = str(exc)
+
+    # Step 3: Calibrated Ensemble Synthesis
+    if llm_res and llm_res.get("recommended_model") not in [None, "", "Could Not Determine"]:
+        llm_model = llm_res["recommended_model"]
+
+        # Case A: Matrix and LLM Agree
+        if _models_agree(matrix_model, llm_model):
+            final_model = matrix_model
+            calibrated_conf = min(0.98, max(matrix_conf, 0.88) + 0.05)
+            source = f"ENSEMBLE ({matrix_res.get('rule_id')} + LoRA Agreement)"
+            reasoning = str(llm_res.get('reasoning', '')).strip()
+            alternatives = llm_res.get("alternatives_considered") or matrix_res.get("matrix_alternatives", [])
+        # Case B: Divergence - check hard constraints
+        else:
+            if matrix_conf >= 0.90:
+                final_model = matrix_model
+                calibrated_conf = round(matrix_conf * 0.92, 2)
+                source = f"STATUTORY_DIRECTIVE ({matrix_res.get('rule_id')})"
+                reasoning = (
+                    f"Statutory architectural constraints mandate {matrix_model}: {matrix_res.get('matrix_reasoning')}"
+                )
+                alternatives = [
+                    {"model": llm_model, "why_not": f"Does not fulfill physical or statutory verification gates required under {matrix_res.get('rule_id')}."}
+                ] + [alt for alt in matrix_res.get("matrix_alternatives", []) if alt.get("model") != llm_model]
+            else:
+                final_model = llm_model
+                calibrated_conf = round(max(0.68, matrix_conf * 0.80), 2)
+                source = "LLM_PRIMARY_WITH_MATRIX_FEEDBACK"
+                reasoning = llm_res.get("reasoning", "")
+                alternatives = llm_res.get("alternatives_considered", [])
+
+    elif matrix_model and matrix_model != "Could Not Determine":
+        # Case C: LLM Unreachable or Parse Failure -> Transparent Fallback to Decision Matrix
+        final_model = matrix_model
+        calibrated_conf = round(matrix_conf * 0.88, 2)
+        source = f"DECISION_MATRIX_FALLBACK ({matrix_res.get('rule_id')})"
+        reasoning = (
+            f"Determined via Statutory Decision Matrix ({matrix_res.get('rule_id')}): "
+            f"{matrix_res.get('matrix_reasoning')}"
         )
+        alternatives = matrix_res.get("matrix_alternatives", [])
 
-    response_text = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True).strip()
+    else:
+        # Case D: Both Undetermined -> Explicit Non-Silent Failure
+        final_model = "Could Not Determine"
+        calibrated_conf = 0.0
+        source = "UNDETERMINED"
+        reasoning = (
+            f"Could not determine a definitive SDLC model for the requirement. "
+            f"LLM status: {llm_err or 'Failed parse'}; Decision Matrix: Inconclusive. "
+            f"Manual review by Chief Software Architect required."
+        )
+        alternatives = []
 
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
+    conf_tier = "Very High" if calibrated_conf >= 0.90 else "High" if calibrated_conf >= 0.80 else "Moderate" if calibrated_conf >= 0.65 else "Low"
 
-    allowed, cleaned, reason = filter_output(response_text)
-    if not allowed:
-        raise ValueError(f"Output rejected by guardrails: {reason}")
-
-    # Parse JSON robustly
-    result = _parse_sdlc_json(cleaned)
-    return result
+    return {
+        "recommended_model": final_model,
+        "confidence": calibrated_conf,
+        "confidence_tier": conf_tier,
+        "source": source,
+        "reasoning": reasoning,
+        "alternatives_considered": alternatives,
+        "decision_matrix_rule": matrix_res.get("rule_id", "None"),
+        "decision_factors": matrix_res.get("decision_factors", {})
+    }
 
 
 def _parse_sdlc_json(text: str) -> Dict[str, Any]:
-    """Robustly extract and parse SDLC JSON from model output."""
+    """Robustly extract and parse SDLC JSON from model output. Never defaults silently."""
+    if not text or not text.strip():
+        return {
+            "recommended_model": "Could Not Determine",
+            "reasoning": "Model returned an empty response.",
+            "alternatives_considered": [],
+            "status": "PARSE_EMPTY"
+        }
+
     start = text.find("{")
     end = text.rfind("}")
     if start != -1 and end != -1:
         json_str = text[start:end + 1]
         try:
-            return json.loads(json_str)
+            parsed = json.loads(json_str)
+            if "recommended_model" in parsed and parsed["recommended_model"]:
+                return parsed
         except json.JSONDecodeError:
             pass
 
-    # Try to fix truncated JSON
+    # Try suffix fixes
     if start != -1:
         for suffix in ["]}}", "}]}", "}}", "}"]:
             try:
-                return json.loads(text[start:] + suffix)
+                parsed = json.loads(text[start:] + suffix)
+                if "recommended_model" in parsed and parsed["recommended_model"]:
+                    return parsed
             except Exception:
                 continue
 
-    # Regex fallback for malformed output
-    def _re_extract(pattern, default=""):
-        m = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
-        return m.group(1).strip() if m else default
+    # Regex fallback
+    m = re.search(r'"recommended_model"\s*:\s*"([^"]+)"', text, re.IGNORECASE)
+    if m and m.group(1).strip():
+        reason_m = re.search(r'"reasoning"\s*:\s*"([^"]+)"', text, re.IGNORECASE)
+        return {
+            "recommended_model": m.group(1).strip(),
+            "reasoning": reason_m.group(1).strip() if reason_m else "Extracted from model response via regex.",
+            "alternatives_considered": [],
+            "status": "REGEX_EXTRACTED"
+        }
 
-    sdlc_name = _re_extract(r'"recommended_model"\s*:\s*"([^"]+)"', "Agile-DevSecOps Hybrid")
-    reasoning = _re_extract(r'"reasoning"\s*:\s*"([^"]+)"', "")
-
+    # NEVER silently return Agile-DevSecOps Hybrid
     return {
-        "recommended_model": sdlc_name,
-        "reasoning": reasoning or f"Selected {sdlc_name} based on Indian regulatory requirements.",
-        "alternatives_considered": [
-            {"model": "Common Alternative", "why_not": "Alternative models lack the regulatory compliance structure required for this requirement."}
-        ]
+        "recommended_model": "Could Not Determine",
+        "reasoning": "Model response was not in expected schema or failed parsing.",
+        "alternatives_considered": [],
+        "status": "PARSE_FAILURE"
     }
 
 

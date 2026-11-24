@@ -1,0 +1,1049 @@
+{
+  "timestamp": "2026-11-24T12:30:15Z",
+  "total_benchmark_cases": 80,
+  "statutory_cases_count": 70,
+  "adversarial_cases_count": 10,
+  "statutory_accuracy_pct": 82.9,
+  "overall_accuracy_pct": 85.0,
+  "adversarial_pass_rate_pct": 100.0,
+  "zero_silent_defaults_verified": true,
+  "confidence_calibration": {
+    "mean_confidence": 0.745,
+    "tier_distribution": {
+      "Very High": 51,
+      "High": 14,
+      "Moderate": 0,
+      "Low": 15
+    }
+  },
+  "domain_accuracy_breakdown": {
+    "atm": {
+      "total": 10,
+      "correct": 9,
+      "accuracy_pct": 90.0
+    },
+    "trading": {
+      "total": 10,
+      "correct": 8,
+      "accuracy_pct": 80.0
+    },
+    "sandbox": {
+      "total": 10,
+      "correct": 9,
+      "accuracy_pct": 90.0
+    },
+    "banking": {
+      "total": 10,
+      "correct": 5,
+      "accuracy_pct": 50.0
+    },
+    "insurance": {
+      "total": 10,
+      "correct": 10,
+      "accuracy_pct": 100.0
+    },
+    "aml": {
+      "total": 10,
+      "correct": 8,
+      "accuracy_pct": 80.0
+    },
+    "payments": {
+      "total": 10,
+      "correct": 9,
+      "accuracy_pct": 90.0
+    },
+    "adversarial": {
+      "total": 10,
+      "correct": 10,
+      "accuracy_pct": 100.0
+    }
+  },
+  "parser_guardrail_test": {
+    "passed": 10,
+    "total": 10,
+    "pass_rate_pct": 100.0,
+    "zero_silent_defaults_guaranteed": true,
+    "details": [
+      {
+        "test_id": "PARSE-CORRUPT-01",
+        "input_sample": "",
+        "parsed_model": "Could Not Determine",
+        "status": "PARSE_EMPTY",
+        "safe": true,
+        "silent_default_violated": false
+      },
+      {
+        "test_id": "PARSE-CORRUPT-02",
+        "input_sample": "   ",
+        "parsed_model": "Could Not Determine",
+        "status": "PARSE_EMPTY",
+        "safe": true,
+        "silent_default_violated": false
+      },
+      {
+        "test_id": "PARSE-CORRUPT-03",
+        "input_sample": "Random unparseable string with no json",
+        "parsed_model": "Could Not Determine",
+        "status": "PARSE_FAILURE",
+        "safe": true,
+        "silent_default_violated": false
+      },
+      {
+        "test_id": "PARSE-CORRUPT-04",
+        "input_sample": "{\"status\": \"error\", \"message\": \"Internal",
+        "parsed_model": "Could Not Determine",
+        "status": "PARSE_FAILURE",
+        "safe": true,
+        "silent_default_violated": false
+      },
+      {
+        "test_id": "PARSE-CORRUPT-05",
+        "input_sample": "{\"result\": \"something\", \"model\": null}",
+        "parsed_model": "Could Not Determine",
+        "status": "PARSE_FAILURE",
+        "safe": true,
+        "silent_default_violated": false
+      },
+      {
+        "test_id": "PARSE-CORRUPT-06",
+        "input_sample": "<html><body>502 Bad Gateway</body></html",
+        "parsed_model": "Could Not Determine",
+        "status": "PARSE_FAILURE",
+        "safe": true,
+        "silent_default_violated": false
+      },
+      {
+        "test_id": "PARSE-CORRUPT-07",
+        "input_sample": "Error: GPU VRAM OOM while generating tok",
+        "parsed_model": "Could Not Determine",
+        "status": "PARSE_FAILURE",
+        "safe": true,
+        "silent_default_violated": false
+      },
+      {
+        "test_id": "PARSE-CORRUPT-08",
+        "input_sample": "{\"recommended_model\": \"\"}",
+        "parsed_model": "Could Not Determine",
+        "status": "PARSE_FAILURE",
+        "safe": true,
+        "silent_default_violated": false
+      },
+      {
+        "test_id": "PARSE-CORRUPT-09",
+        "input_sample": "{broken json string...",
+        "parsed_model": "Could Not Determine",
+        "status": "PARSE_FAILURE",
+        "safe": true,
+        "silent_default_violated": false
+      },
+      {
+        "test_id": "PARSE-CORRUPT-10",
+        "input_sample": "null",
+        "parsed_model": "Could Not Determine",
+        "status": "PARSE_FAILURE",
+        "safe": true,
+        "silent_default_violated": false
+      }
+    ]
+  },
+  "ensemble_sample_verifications": [
+    {
+      "id": "ATM-01",
+      "domain": "atm",
+      "expected": "V-Model with DevSecOps Gates",
+      "ensemble_recommended": "V-Model with DevSecOps Gates",
+      "calibrated_confidence": 0.87,
+      "confidence_tier": "High",
+      "source": "DECISION_MATRIX_OVERRIDE (DM-RULE-01-HARDWARE-ATM)",
+      "rule_id": "DM-RULE-01-HARDWARE-ATM",
+      "matches_expected": true,
+      "latency_s": 20.13
+    },
+    {
+      "id": "TRD-01",
+      "domain": "trading",
+      "expected": "V-Model with DevSecOps Gates",
+      "ensemble_recommended": "V-Model with DevSecOps Gates",
+      "calibrated_confidence": 0.98,
+      "confidence_tier": "Very High",
+      "source": "ENSEMBLE (DM-RULE-02-ALGO-COLOCATION + LoRA Agreement)",
+      "rule_id": "DM-RULE-02-ALGO-COLOCATION",
+      "matches_expected": true,
+      "latency_s": 11.4
+    },
+    {
+      "id": "SND-01",
+      "domain": "sandbox",
+      "expected": "Prototyping Model / Iterative Pilot",
+      "ensemble_recommended": "Prototyping Model",
+      "calibrated_confidence": 0.98,
+      "confidence_tier": "Very High",
+      "source": "ENSEMBLE (DM-RULE-03-SANDBOX-POC + LoRA Agreement)",
+      "rule_id": "DM-RULE-03-SANDBOX-POC",
+      "matches_expected": true,
+      "latency_s": 9.82
+    },
+    {
+      "id": "CBS-01",
+      "domain": "banking",
+      "expected": "Waterfall / Stage-Gate",
+      "ensemble_recommended": "Waterfall / Staged-Gate",
+      "calibrated_confidence": 0.86,
+      "confidence_tier": "High",
+      "source": "DECISION_MATRIX_OVERRIDE (DM-RULE-04-CORE-BANKING)",
+      "rule_id": "DM-RULE-04-CORE-BANKING",
+      "matches_expected": true,
+      "latency_s": 12.22
+    },
+    {
+      "id": "INS-01",
+      "domain": "insurance",
+      "expected": "Waterfall / Stage-Gate",
+      "ensemble_recommended": "Waterfall / Staged-Gate",
+      "calibrated_confidence": 0.83,
+      "confidence_tier": "High",
+      "source": "DECISION_MATRIX_OVERRIDE (DM-RULE-05A-INSURANCE-ACTUARIAL-CORE)",
+      "rule_id": "DM-RULE-05A-INSURANCE-ACTUARIAL-CORE",
+      "matches_expected": true,
+      "latency_s": 7.76
+    },
+    {
+      "id": "AML-01",
+      "domain": "aml",
+      "expected": "Agile-DevSecOps Hybrid",
+      "ensemble_recommended": "Agile-DevSecOps Hybrid",
+      "calibrated_confidence": 0.9700000000000001,
+      "confidence_tier": "Very High",
+      "source": "ENSEMBLE (DM-RULE-06-AML-COMPLIANCE + LoRA Agreement)",
+      "rule_id": "DM-RULE-06-AML-COMPLIANCE",
+      "matches_expected": true,
+      "latency_s": 9.34
+    },
+    {
+      "id": "PAY-01",
+      "domain": "payments",
+      "expected": "Agile-DevSecOps Hybrid",
+      "ensemble_recommended": "Agile-DevSecOps Hybrid",
+      "calibrated_confidence": 0.98,
+      "confidence_tier": "Very High",
+      "source": "ENSEMBLE (DM-RULE-07-PAYMENTS-FINTECH + LoRA Agreement)",
+      "rule_id": "DM-RULE-07-PAYMENTS-FINTECH",
+      "matches_expected": true,
+      "latency_s": 9.12
+    },
+    {
+      "id": "ADV-01",
+      "domain": "adversarial",
+      "expected": "Could Not Determine",
+      "ensemble_recommended": "Could Not Determine",
+      "calibrated_confidence": 0.0,
+      "confidence_tier": "Low",
+      "source": "UNDETERMINED_OUT_OF_DOMAIN",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "matches_expected": true,
+      "latency_s": 0.0
+    }
+  ],
+  "matrix_case_evaluations": [
+    {
+      "id": "ATM-01",
+      "domain": "atm",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-01-HARDWARE-ATM",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "ATM-02",
+      "domain": "atm",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-01-HARDWARE-ATM",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "ATM-03",
+      "domain": "atm",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-01-HARDWARE-ATM",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "ATM-04",
+      "domain": "atm",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-01-HARDWARE-ATM",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "ATM-05",
+      "domain": "atm",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-01-HARDWARE-ATM",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "ATM-06",
+      "domain": "atm",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-01-HARDWARE-ATM",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "ATM-07",
+      "domain": "atm",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-01-HARDWARE-ATM",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "ATM-08",
+      "domain": "atm",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": false
+    },
+    {
+      "id": "ATM-09",
+      "domain": "atm",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-01-HARDWARE-ATM",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "ATM-10",
+      "domain": "atm",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-08-HIGH-RISK-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": true
+    },
+    {
+      "id": "TRD-01",
+      "domain": "trading",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-02-ALGO-COLOCATION",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "TRD-02",
+      "domain": "trading",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-02-ALGO-COLOCATION",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "TRD-03",
+      "domain": "trading",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-02-ALGO-COLOCATION",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "TRD-04",
+      "domain": "trading",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-02-ALGO-COLOCATION",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "TRD-05",
+      "domain": "trading",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-02-ALGO-COLOCATION",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "TRD-06",
+      "domain": "trading",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-09-STANDARD-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": false
+    },
+    {
+      "id": "TRD-07",
+      "domain": "trading",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-02-ALGO-COLOCATION",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "TRD-08",
+      "domain": "trading",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-02-ALGO-COLOCATION",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "TRD-09",
+      "domain": "trading",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": false
+    },
+    {
+      "id": "TRD-10",
+      "domain": "trading",
+      "expected": "V-Model with DevSecOps Gates",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-08-HIGH-RISK-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": true
+    },
+    {
+      "id": "SND-01",
+      "domain": "sandbox",
+      "expected": "Prototyping Model / Iterative Pilot",
+      "matrix_recommended": "Prototyping Model",
+      "rule_id": "DM-RULE-03-SANDBOX-POC",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "SND-02",
+      "domain": "sandbox",
+      "expected": "Prototyping Model / Iterative Pilot",
+      "matrix_recommended": "Prototyping Model",
+      "rule_id": "DM-RULE-03-SANDBOX-POC",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "SND-03",
+      "domain": "sandbox",
+      "expected": "Prototyping Model / Iterative Pilot",
+      "matrix_recommended": "Prototyping Model",
+      "rule_id": "DM-RULE-03-SANDBOX-POC",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "SND-04",
+      "domain": "sandbox",
+      "expected": "Prototyping Model / Iterative Pilot",
+      "matrix_recommended": "Prototyping Model",
+      "rule_id": "DM-RULE-03-SANDBOX-POC",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "SND-05",
+      "domain": "sandbox",
+      "expected": "Prototyping Model / Iterative Pilot",
+      "matrix_recommended": "Prototyping Model",
+      "rule_id": "DM-RULE-03-SANDBOX-POC",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "SND-06",
+      "domain": "sandbox",
+      "expected": "Prototyping Model / Iterative Pilot",
+      "matrix_recommended": "Prototyping Model",
+      "rule_id": "DM-RULE-03-SANDBOX-POC",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "SND-07",
+      "domain": "sandbox",
+      "expected": "Prototyping Model / Iterative Pilot",
+      "matrix_recommended": "Prototyping Model",
+      "rule_id": "DM-RULE-03-SANDBOX-POC",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "SND-08",
+      "domain": "sandbox",
+      "expected": "Prototyping Model / Iterative Pilot",
+      "matrix_recommended": "Prototyping Model",
+      "rule_id": "DM-RULE-03-SANDBOX-POC",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "SND-09",
+      "domain": "sandbox",
+      "expected": "Prototyping Model / Iterative Pilot",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": false
+    },
+    {
+      "id": "SND-10",
+      "domain": "sandbox",
+      "expected": "Prototyping Model / Iterative Pilot",
+      "matrix_recommended": "Prototyping Model",
+      "rule_id": "DM-RULE-03-SANDBOX-POC",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "CBS-01",
+      "domain": "banking",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "Waterfall / Staged-Gate",
+      "rule_id": "DM-RULE-04-CORE-BANKING",
+      "confidence": 0.93,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "CBS-02",
+      "domain": "banking",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-08-HIGH-RISK-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": false
+    },
+    {
+      "id": "CBS-03",
+      "domain": "banking",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "Waterfall / Staged-Gate",
+      "rule_id": "DM-RULE-04-CORE-BANKING",
+      "confidence": 0.93,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "CBS-04",
+      "domain": "banking",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-08-HIGH-RISK-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": false
+    },
+    {
+      "id": "CBS-05",
+      "domain": "banking",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "Waterfall / Staged-Gate",
+      "rule_id": "DM-RULE-04-CORE-BANKING",
+      "confidence": 0.93,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "CBS-06",
+      "domain": "banking",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "Waterfall / Staged-Gate",
+      "rule_id": "DM-RULE-04-CORE-BANKING",
+      "confidence": 0.93,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "CBS-07",
+      "domain": "banking",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "Waterfall / Staged-Gate",
+      "rule_id": "DM-RULE-04-CORE-BANKING",
+      "confidence": 0.93,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "CBS-08",
+      "domain": "banking",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-08-HIGH-RISK-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": false
+    },
+    {
+      "id": "CBS-09",
+      "domain": "banking",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-08-HIGH-RISK-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": false
+    },
+    {
+      "id": "CBS-10",
+      "domain": "banking",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-08-HIGH-RISK-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": false
+    },
+    {
+      "id": "INS-01",
+      "domain": "insurance",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "Waterfall / Staged-Gate",
+      "rule_id": "DM-RULE-05A-INSURANCE-ACTUARIAL-CORE",
+      "confidence": 0.9,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "INS-02",
+      "domain": "insurance",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-05B-INSURANCE-DIGITAL-PORTAL",
+      "confidence": 0.91,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "INS-03",
+      "domain": "insurance",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "Waterfall / Staged-Gate",
+      "rule_id": "DM-RULE-05A-INSURANCE-ACTUARIAL-CORE",
+      "confidence": 0.9,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "INS-04",
+      "domain": "insurance",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-05B-INSURANCE-DIGITAL-PORTAL",
+      "confidence": 0.91,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "INS-05",
+      "domain": "insurance",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-05B-INSURANCE-DIGITAL-PORTAL",
+      "confidence": 0.91,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "INS-06",
+      "domain": "insurance",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "Waterfall / Staged-Gate",
+      "rule_id": "DM-RULE-05A-INSURANCE-ACTUARIAL-CORE",
+      "confidence": 0.9,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "INS-07",
+      "domain": "insurance",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-05B-INSURANCE-DIGITAL-PORTAL",
+      "confidence": 0.91,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "INS-08",
+      "domain": "insurance",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-05B-INSURANCE-DIGITAL-PORTAL",
+      "confidence": 0.91,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "INS-09",
+      "domain": "insurance",
+      "expected": "Waterfall / Stage-Gate",
+      "matrix_recommended": "Waterfall / Staged-Gate",
+      "rule_id": "DM-RULE-05A-INSURANCE-ACTUARIAL-CORE",
+      "confidence": 0.9,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "INS-10",
+      "domain": "insurance",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-07-PAYMENTS-FINTECH",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "AML-01",
+      "domain": "aml",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-06-AML-COMPLIANCE",
+      "confidence": 0.92,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "AML-02",
+      "domain": "aml",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-09-STANDARD-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": true
+    },
+    {
+      "id": "AML-03",
+      "domain": "aml",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-06-AML-COMPLIANCE",
+      "confidence": 0.92,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "AML-04",
+      "domain": "aml",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-06-AML-COMPLIANCE",
+      "confidence": 0.92,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "AML-05",
+      "domain": "aml",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": false
+    },
+    {
+      "id": "AML-06",
+      "domain": "aml",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-09-STANDARD-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": true
+    },
+    {
+      "id": "AML-07",
+      "domain": "aml",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": false
+    },
+    {
+      "id": "AML-08",
+      "domain": "aml",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-09-STANDARD-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": true
+    },
+    {
+      "id": "AML-09",
+      "domain": "aml",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-09-STANDARD-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": true
+    },
+    {
+      "id": "AML-10",
+      "domain": "aml",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-06-AML-COMPLIANCE",
+      "confidence": 0.92,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "PAY-01",
+      "domain": "payments",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-07-PAYMENTS-FINTECH",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "PAY-02",
+      "domain": "payments",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-07-PAYMENTS-FINTECH",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "PAY-03",
+      "domain": "payments",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-07-PAYMENTS-FINTECH",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "PAY-04",
+      "domain": "payments",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "V-Model with DevSecOps Gates",
+      "rule_id": "DM-RULE-01-HARDWARE-ATM",
+      "confidence": 0.95,
+      "confidence_tier": "Very High",
+      "match": false
+    },
+    {
+      "id": "PAY-05",
+      "domain": "payments",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-09-STANDARD-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": true
+    },
+    {
+      "id": "PAY-06",
+      "domain": "payments",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-07-PAYMENTS-FINTECH",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "PAY-07",
+      "domain": "payments",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-09-STANDARD-FINANCIAL",
+      "confidence": 0.85,
+      "confidence_tier": "High",
+      "match": true
+    },
+    {
+      "id": "PAY-08",
+      "domain": "payments",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-07-PAYMENTS-FINTECH",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "PAY-09",
+      "domain": "payments",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-07-PAYMENTS-FINTECH",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "PAY-10",
+      "domain": "payments",
+      "expected": "Agile-DevSecOps Hybrid",
+      "matrix_recommended": "Agile-DevSecOps Hybrid",
+      "rule_id": "DM-RULE-07-PAYMENTS-FINTECH",
+      "confidence": 0.94,
+      "confidence_tier": "Very High",
+      "match": true
+    },
+    {
+      "id": "ADV-01",
+      "domain": "adversarial",
+      "expected": "Could Not Determine",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": true
+    },
+    {
+      "id": "ADV-02",
+      "domain": "adversarial",
+      "expected": "Could Not Determine",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": true
+    },
+    {
+      "id": "ADV-03",
+      "domain": "adversarial",
+      "expected": "Could Not Determine",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": true
+    },
+    {
+      "id": "ADV-04",
+      "domain": "adversarial",
+      "expected": "Could Not Determine",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": true
+    },
+    {
+      "id": "ADV-05",
+      "domain": "adversarial",
+      "expected": "Could Not Determine",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": true
+    },
+    {
+      "id": "ADV-06",
+      "domain": "adversarial",
+      "expected": "Could Not Determine",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": true
+    },
+    {
+      "id": "ADV-07",
+      "domain": "adversarial",
+      "expected": "Could Not Determine",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": true
+    },
+    {
+      "id": "ADV-08",
+      "domain": "adversarial",
+      "expected": "Could Not Determine",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": true
+    },
+    {
+      "id": "ADV-09",
+      "domain": "adversarial",
+      "expected": "Could Not Determine",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": true
+    },
+    {
+      "id": "ADV-10",
+      "domain": "adversarial",
+      "expected": "Could Not Determine",
+      "matrix_recommended": "Could Not Determine",
+      "rule_id": "DM-RULE-UNDETERMINED-OUT-OF-DOMAIN",
+      "confidence": 0.0,
+      "confidence_tier": "Low",
+      "match": true
+    }
+  ]
+}

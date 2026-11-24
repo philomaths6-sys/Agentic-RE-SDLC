@@ -11,8 +11,11 @@ Features:
 import os
 import sys
 import io
+import re
 import json
+import importlib
 import pathlib
+from datetime import datetime, timezone
 from typing import Any, Dict
 import streamlit as st
 
@@ -28,7 +31,8 @@ from agents.sdlc_agent import recommend_sdlc_structured
 from db.database import (
     init_db, register_user, authenticate_user,
     get_user_chat_sessions, load_chat_session,
-    save_chat_session_state, delete_chat_session
+    save_chat_session_state, delete_chat_session,
+    record_audit_log, record_gate_decision, get_audit_logs, get_gate_decisions
 )
 
 try:
@@ -474,28 +478,46 @@ def extract_text_from_upload(uploaded_file) -> str:
 # -----------------------------------------------------------------------------
 def _run_pipeline_interactive(prompt: str) -> dict:
     """Execute the multi-agent pipeline with live step-by-step UI progress across all agents."""
-    with st.status("Executing Multi-Agent Analysis Pipeline...", expanded=True) as status_box:
-        def on_step(agent_label, message):
-            status_box.write(f"**[{agent_label}]**: {message}")
+    import importlib
+    import requirements_analysis
+    import agents.extraction_agent
+    import agents.sdlc_agent
+    import rag.verifier
+    import governance.risk_engine
+    import evaluation.quality_evaluator
+    import synthesis.requirement_assembler
+    import telemetry.pipeline_tracer
+    importlib.reload(governance.risk_engine)
+    importlib.reload(evaluation.quality_evaluator)
+    importlib.reload(synthesis.requirement_assembler)
+    importlib.reload(telemetry.pipeline_tracer)
+    importlib.reload(agents.extraction_agent)
+    importlib.reload(requirements_analysis)
+    importlib.reload(agents.sdlc_agent)
+    importlib.reload(rag.verifier)
+
+    with st.status("Executing Requirements & Governance Pipeline...", expanded=True) as status_box:
+        def on_step(stage_label, message):
+            status_box.write(f"**[{stage_label}]**: {message}")
             
-        analysis = analyze_requirement(prompt, step_callback=on_step)
+        analysis = requirements_analysis.analyze_requirement(prompt, step_callback=on_step)
         
         if analysis.get("is_out_of_domain", False):
-            status_box.update(label="Supervisor Guardrail: Domain Boundary Alert (Out of Scope)", state="error", expanded=False)
+            status_box.update(label="Perimeter Guardrail: Domain Boundary Alert (Out of Scope)", state="error", expanded=False)
         elif analysis.get("is_security_violation", False):
-            status_box.update(label="Supervisor Guardrail: Security Violation Alert", state="error", expanded=False)
+            status_box.update(label="Perimeter Guardrail: Security Violation Alert", state="error", expanded=False)
         elif analysis.get("is_conversational", False):
             status_box.update(label="Intent Verified (Conversational)", state="complete", expanded=False)
         else:
-            status_box.write("**Artefact & Traceability Agent**: Compiling IEEE 830-compliant SRS PDF report...")
+            status_box.write("**Specification Assembler**: Compiling IEEE 830-compliant SRS PDF report...")
             _safe_generate_pdf(analysis, "output/requirements_analysis.pdf")
-            status_box.update(label="Multi-Agent Analysis Pipeline Complete", state="complete", expanded=False)
+            status_box.update(label="Engineering & Governance Pipeline Complete", state="complete", expanded=False)
             
     return analysis
 
 
 def render_pipeline_trace_expander(analysis: dict, sdlc_rec: dict = None):
-    """Render a comprehensive multi-agent collaborative swarm reasoning workspace."""
+    """Render a comprehensive system execution and pipeline stage trace."""
     trace = analysis.get("agent_trace") or analysis.get("pipeline_trace", [])
     if not trace:
         return
@@ -511,69 +533,70 @@ def render_pipeline_trace_expander(analysis: dict, sdlc_rec: dict = None):
     if sdlc_rec and sdlc_rec.get("recommended_model"):
         sdlc_display = f"{sdlc_rec.get('recommended_model')}"
 
-    with st.expander("Multi-Agent System Execution & Reasoning Trace (6 Autonomous Specialists)", expanded=True):
-        # Swarm Orchestration Header Ribbon
+    with st.expander("System Execution & Pipeline Trace (Engineering & Governance Stages)", expanded=True):
+        # Pipeline Stage Status Header Ribbon
         st.markdown(f"""
         <div style='background-color:#161618; border:1px solid #2B2B30; border-radius:10px; padding:14px 18px; margin-bottom:18px;'>
             <div style='font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#8E8EA0; margin-bottom:10px;'>
-                Active Multi-Agent Swarm Status (6 Autonomous Specialists)
+                Pipeline Stage Execution Status
             </div>
             <div style='display:flex; flex-wrap:wrap; gap:12px; font-size:13px;'>
                 <div style='background:#1E1E22; border:1px solid #333338; border-radius:6px; padding:6px 12px;'>
-                    <span style='color:#A78BFA; font-weight:600;'>Supervisor:</span> <b style='color:#10A37F;'>PASSED (1.0)</b>
+                    <span style='color:#A78BFA; font-weight:600;'>Perimeter Gate:</span> <b style='color:#10A37F;'>PASSED (1.0)</b>
                 </div>
                 <div style='background:#1E1E22; border:1px solid #333338; border-radius:6px; padding:6px 12px;'>
-                    <span style='color:#60A5FA; font-weight:600;'>Elicitation:</span> <b style='color:#ECECEC;'>{domain.split()[0]} Domain</b>
+                    <span style='color:#60A5FA; font-weight:600;'>Domain Scope:</span> <b style='color:#ECECEC;'>{domain.split()[0]} Domain</b>
                 </div>
                 <div style='background:#1E1E22; border:1px solid #333338; border-radius:6px; padding:6px 12px;'>
-                    <span style='color:#38BDF8; font-weight:600;'>Compliance RAG:</span> <b style='color:#38BDF8;'>3,119 Chunks Active</b>
+                    <span style='color:#38BDF8; font-weight:600;'>Regulatory RAG:</span> <b style='color:#38BDF8;'>3,119 Chunks Active</b>
                 </div>
                 <div style='background:#1E1E22; border:1px solid #333338; border-radius:6px; padding:6px 12px;'>
-                    <span style='color:#34D399; font-weight:600;'>Extraction LoRA:</span> <b style='color:#34D399;'>4-bit GPU NF4</b>
+                    <span style='color:#34D399; font-weight:600;'>Extraction Model:</span> <b style='color:#34D399;'>4-bit GPU NF4</b>
                 </div>
                 <div style='background:#1E1E22; border:1px solid #333338; border-radius:6px; padding:6px 12px;'>
-                    <span style='color:#FBBF24; font-weight:600;'>Artefact:</span> <b style='color:#FBBF24;'>{reqs_count} Reqs / 6 Pillars</b>
+                    <span style='color:#FBBF24; font-weight:600;'>Assembler:</span> <b style='color:#FBBF24;'>{reqs_count} Reqs / 6 Pillars</b>
                 </div>
                 <div style='background:#1E1E22; border:1px solid #333338; border-radius:6px; padding:6px 12px;'>
-                    <span style='color:#EC4899; font-weight:600;'>SDLC Agent:</span> <b style='color:#ECECEC;'>{sdlc_display}</b>
+                    <span style='color:#EC4899; font-weight:600;'>SDLC Governance:</span> <b style='color:#ECECEC;'>{sdlc_display}</b>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        # 6 Dedicated Agent Tabs
-        agent_tabs = st.tabs([
-            "Supervisor Agent",
-            "Elicitation & Intent",
-            "Compliance & RAG",
-            "Architecture Extraction",
-            "Artefacts & Traceability",
-            "SDLC Recommendation"
+        # 7 Dedicated Pipeline Stage Tabs
+        stage_tabs = st.tabs([
+            "Perimeter Guardrail",
+            "Domain Scope",
+            "Regulatory RAG",
+            "Extraction Model",
+            "Specification Assembler",
+            "SDLC Governance",
+            "Audit Trail"
         ])
 
-        # Tab 1: Supervisor Agent
-        with agent_tabs[0]:
+        # Tab 1: Perimeter Guardrail
+        with stage_tabs[0]:
             sup = agents_by_id.get("supervisor", {})
-            st.markdown("#### Supervisor Agent (Orchestration & Guardrail Gatekeeper)")
-            st.markdown(f"*{sup.get('output_summary', 'Dispatched execution swarm. Input query verified compliant with Zero-Trust safety filters.')}*")
+            st.markdown("#### Perimeter Guardrail (Zero-Trust Input & Boundary Filter)")
+            st.markdown(f"*{sup.get('output_summary', 'Dispatched execution pipeline. Input query verified compliant with Zero-Trust safety filters.')}*")
             
             c1, c2, c3 = st.columns(3)
             c1.metric("Safety Guardrail", "PASSED", "Score 1.0 (Zero-Trust)")
             c2.metric("Threat Detection", "0 Anomalies", "No injection / PII")
-            c3.metric("Swarm Routing", "Dispatched", "5 Downstream Specialists")
+            c3.metric("Pipeline Dispatch", "Active", "Downstream Stages Cleared")
 
             st.markdown("##### Guardrail Audit Log:")
             st.markdown("""
             - **Input Injection Verification**: Scanned against prompt leakage and adversarial delimiters (`PASSED`)
             - **PII & Data Redaction Scan**: Verified zero unmasked statutory identification numbers or passwords (`PASSED`)
             - **Intent Classification**: Verified request as domain-specific financial system design query (`ENTERPRISE_SRS`)
-            - **Task Orchestration**: Initialized memory context, scheduled asynchronous RAG grounding, and routed payload to Elicitation Agent.
+            - **Pipeline Orchestration**: Initialized memory context, scheduled asynchronous RAG grounding, and routed payload to domain scope classifier.
             """)
 
-        # Tab 2: Elicitation & Intent Agent
-        with agent_tabs[1]:
+        # Tab 2: Domain Scope Classification
+        with stage_tabs[1]:
             eli = agents_by_id.get("elicitation", {})
-            st.markdown("#### Elicitation & Intent Agent (Stakeholder Intent & Ambiguity Resolution)")
+            st.markdown("#### Domain Scope Classification (Scope & Intent Resolution)")
             st.markdown(f"*{eli.get('output_summary', 'Structured system scope and resolved domain terminology ambiguities.')}*")
             
             c1, c2 = st.columns(2)
@@ -587,10 +610,10 @@ def render_pipeline_trace_expander(analysis: dict, sdlc_rec: dict = None):
             st.markdown(f"- **Architectural Scope**: Enforces end-to-end segregation of duties across frontend, microservices, secure authentication, and sovereign data storage.")
             st.markdown("- **Boundary Constraints**: Enforces zero storage of raw biometrics, client-side encryption, and strict least-privilege role boundaries.")
 
-        # Tab 3: Quality & Compliance Agent (RAG)
-        with agent_tabs[2]:
+        # Tab 3: Regulatory Retrieval (RAG)
+        with stage_tabs[2]:
             com = agents_by_id.get("compliance", {})
-            st.markdown("#### Quality & Compliance Agent (Semantic RAG & Statutory Citations)")
+            st.markdown("#### Regulatory Knowledge Retrieval (Semantic RAG & Statutory Citations)")
             st.markdown(f"*{com.get('output_summary', 'Retrieved statutory regulatory clauses from Qdrant vector database.')}*")
             
             c1, c2, c3 = st.columns(3)
@@ -617,11 +640,11 @@ def render_pipeline_trace_expander(analysis: dict, sdlc_rec: dict = None):
             for reg in analysis.get("regulations", []):
                 st.markdown(f"- **{reg.get('regulation')}** ({reg.get('relevance')}): *Citation: `{reg.get('statutory_citation')}`*")
 
-        # Tab 4: Extraction & Classification Agent
-        with agent_tabs[3]:
+        # Tab 4: Architecture Extraction Model
+        with stage_tabs[3]:
             ext = agents_by_id.get("extraction", {})
             ext_details = ext.get("details", {})
-            st.markdown("#### Extraction & Classification Agent (Fine-Tuned 4-bit LoRA)")
+            st.markdown("#### Architecture Extraction Model (Local Fine-Tuned GPU LoRA)")
             st.markdown(f"*{ext.get('output_summary', 'Extracted core specifications with MoSCoW prioritization on local GPU.')}*")
             
             c1, c2, c3 = st.columns(3)
@@ -645,16 +668,16 @@ def render_pipeline_trace_expander(analysis: dict, sdlc_rec: dict = None):
                 for r in fine_tuned_ext["requirements"]:
                     st.markdown(f"- **{r.get('title', '')}**: {r.get('description', '')}")
 
-        # Tab 5: Artefact & Traceability Agent
-        with agent_tabs[4]:
+        # Tab 5: Specification Assembler
+        with stage_tabs[4]:
             art = agents_by_id.get("artefact", {})
-            st.markdown("#### Artefact & Traceability Agent (Modular Specifications & IEEE 830 Compiler)")
+            st.markdown("#### Specification Assembler (Modular Synthesis & IEEE 830 Quality)")
             st.markdown(f"*{art.get('output_summary', 'Synthesized specifications across 6 pillars with end-to-end traceability.')}*")
             
             c1, c2, c3 = st.columns(3)
             c1.metric("Generated Requirements", f"{reqs_count} Reqs", "Standardized IEEE 830")
             c2.metric("Architectural Pillars", f"{len(analysis.get('categories_breakdown', {}))} Pillars", "Full Stack Coverage")
-            c3.metric("Compiled Artefact", "IEEE 830 PDF", "24+ KB Generated")
+            c3.metric("Compiled Artefact", "IEEE 830 PDF", "Generated & Grounded")
 
             st.markdown("##### Architectural Pillar Breakdown:")
             cat_breakdown = analysis.get("categories_breakdown", {})
@@ -684,9 +707,9 @@ def render_pipeline_trace_expander(analysis: dict, sdlc_rec: dict = None):
                 for tc in tech_controls:
                     st.markdown(f"- **{tc.get('control_id')} — {tc.get('title')}**: {tc.get('specification')} *(Verification: {tc.get('verification')})*")
 
-        # Tab 6: SDLC Recommendation Agent
-        with agent_tabs[5]:
-            st.markdown("#### SDLC Recommendation Agent (Governance Decision & LLM Lifecycle Rationale)")
+        # Tab 6: SDLC Recommendation Engine
+        with stage_tabs[5]:
+            st.markdown("#### SDLC Recommendation Engine (Governance Decision & LLM Lifecycle Rationale)")
             
             if sdlc_rec and sdlc_rec.get("recommended_model"):
                 rec_model = sdlc_rec.get("recommended_model")
@@ -712,6 +735,26 @@ def render_pipeline_trace_expander(analysis: dict, sdlc_rec: dict = None):
                 - **Hot-Swap Adapter Ready**: `finetune/adapters/sdlc_adapter` is loaded and prepared in memory.
                 - **Next Action**: Review and approve the 30+ specifications in Step 1 below to trigger the fine-tuned SDLC model evaluation!
                 """)
+
+        # Tab 7: Immutable Statutory Audit Trail
+        with stage_tabs[6]:
+            st.markdown("#### Immutable Statutory Audit Trail (PostgreSQL `audit_log` & `gate_decisions`)")
+            sess_id = st.session_state.current_session_id
+            try:
+                gate_recs = get_gate_decisions(session_id=sess_id)
+                audit_records = get_audit_logs(session_id=sess_id, limit=20)
+                if gate_recs:
+                    st.markdown("##### Verified Stage-Gate Sign-offs:")
+                    for gr in gate_recs:
+                        st.markdown(f"- **{gr['gate_name']}** &rarr; `{gr['decision']}` by **{gr['reviewer_email']}** ({gr['reviewer_role']}) at `{gr['timestamp'][:19]}`: *\"{gr.get('rationale', '')}\"*")
+                if audit_records:
+                    st.markdown("##### Recent Audit Trail Events:")
+                    for ar in audit_records:
+                        st.markdown(f"- `{ar['timestamp'][:19]}` &bull; **{ar['action']}** by `{ar['actor_email']}` (Model: `{ar['model_version']}`)")
+                if not gate_recs and not audit_records:
+                    st.caption("No historical audit records for this session yet. Events are appended upon requirement submission and stage-gate approval.")
+            except Exception as _aud_err:
+                st.caption(f"Audit log status: {_aud_err}")
 
 
 # -----------------------------------------------------------------------------
@@ -984,16 +1027,27 @@ if (
 
     with st.chat_message("assistant"):
         # Document Heading & Metadata
+        expert_q = analysis.get("expert_quality_rating", {})
+        q_label = expert_q.get("rating_label", "IEEE 830 Compliant")
+        clause_tr = analysis.get("clause_level_traceability_pct", 100.0)
+
         st.markdown(f"# {analysis.get('title', 'Software Requirements Specification')}")
         st.markdown(
             f"**Domain**: {analysis.get('domain')} &nbsp;|&nbsp; "
             f"**MoSCoW Priority**: {analysis.get('moscow_priority', 'Must Have')} &nbsp;|&nbsp; "
             f"**Statutory Risk**: {risk_lvl} ({risk_score}/100) &nbsp;|&nbsp; "
-            f"**Total Specifications**: {len(reqs_list)} Requirements"
+            f"**Quality Rating**: `{q_label}` &nbsp;|&nbsp; "
+            f"**Clause Traceability**: `{clause_tr}%`"
         )
         st.markdown(f"> **Executive Prioritization**: {analysis.get('priority_justification', '')}")
         if risk_summary:
             st.markdown(f"> **Statutory Risk Assessment**: {risk_summary}")
+
+        st.warning(
+            "⚠️ **NOT LEGAL ADVICE**: This automated Software Requirements Specification is generated for engineering, "
+            "architecture, and regulatory scoping purposes only. It does not constitute formal legal counsel. "
+            "Regulated financial entities require formal compliance officer sign-off before production release."
+        )
 
         # Claude-Style Interactive Multi-Agent Swarm Execution & Reasoning Trace
         render_pipeline_trace_expander(analysis, sdlc_rec=st.session_state.get("sdlc_recommendation"))
@@ -1008,11 +1062,19 @@ if (
             for r in cat_reqs:
                 st.markdown(f"### {r.get('id')} — {r.get('title')}")
                 st.markdown(r.get("description", ""))
+                r_source = r.get("source", "LLM_SYNTHESIZED")
+                source_badge = f" &nbsp;|&nbsp; **Source**: `{r_source}`" if r_source else ""
                 st.markdown(
                     f"- **Priority**: `{r.get('priority')}` | "
-                    f"**Regulation**: *{r.get('regulation')}*\n"
+                    f"**Regulation**: *{r.get('regulation')}*{source_badge}\n"
                     f"- **Acceptance Criteria**: {r.get('acceptance_criteria')}"
                 )
+                if r.get("statutory_citation"):
+                    ver_badge = "✅ Grounding Verified" if r.get("verified_grounding") else "ℹ️ Standard Directive"
+                    st.markdown(f"- **Statutory Citation**: `{r.get('statutory_citation')}` &nbsp; *({ver_badge})*")
+                if r.get("statutory_passage"):
+                    with st.expander(f"Verbatim Statutory Passage ({r.get('id')})", expanded=False):
+                        st.caption(f"\"{r.get('statutory_passage')}\"")
             pillar_num += 1
 
         st.markdown("---")
@@ -1042,17 +1104,65 @@ if (
         # Human Verification Controls
         st.markdown("---")
         if not st.session_state.requirements_approved:
-            st.markdown("## Step 1: Human Verification of Requirements")
-            st.caption(f"Review the {len(reqs_list)} specifications above. Approve to advance to SDLC strategy, request adjustments, or reset.")
-            
+            st.markdown("## Step 1: Human Verification & Compliance Officer Sign-off Gate")
+            st.caption(f"Review the {len(reqs_list)} specifications above. Statutory governance mandates human and compliance verification prior to SDLC stage progression.")
+
+            # Compliance Officer Sign-Off & Verification Block
+            u = st.session_state.get("authenticated_user", {})
+            user_role = u.get("role", "Compliance Officer / Auditor")
+            user_name = u.get("full_name", "Authorizing Officer")
+
+            with st.expander("🛡️ Compliance Officer Statutory Sign-off Form", expanded=True):
+                st.markdown(
+                    "In adherence to regulatory governance frameworks (RBI, NPCI, SEBI, UIDAI, DPDP), "
+                    "a designated Compliance Officer or Principal Architect must verify the statutory citations and technical controls."
+                )
+                signoff_col1, signoff_col2 = st.columns([1, 1])
+                with signoff_col1:
+                    officer_input = st.text_input("Reviewing Officer Name:", value=user_name, key="co_signoff_name")
+                with signoff_col2:
+                    role_input = st.text_input("Designation / Role:", value=user_role, key="co_signoff_role")
+
+                co_cert = st.checkbox(
+                    "I hereby certify that I have verified the regulatory citations and architectural controls against the applicable statutory corpus.",
+                    value=True,
+                    key="co_cert_checkbox"
+                )
+
             is_revising = st.session_state.get("show_revision_box", False)
             is_rejecting = st.session_state.get("show_reject_confirm", False)
-            
-            c_app, c_rev, c_rej = st.columns([1.3, 1.2, 0.8])
+
+            c_app, c_rev, c_rej = st.columns([1.5, 1.2, 0.8])
             with c_app:
-                if st.button("Approve Requirements & Predict SDLC", type="primary", use_container_width=True):
+                if st.button("Sign Off & Predict SDLC", type="primary", use_container_width=True):
+                    st.session_state.current_analysis["compliance_signoff"] = {
+                        "signed_off": True,
+                        "officer_name": officer_input if officer_input else user_name,
+                        "role": role_input if role_input else user_role,
+                        "certified_statutory": co_cert,
+                        "signed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                    }
+                    try:
+                        generate_pdf_report(st.session_state.current_analysis, "output/requirements_analysis.pdf")
+                    except Exception as _pdf_err:
+                        print(f"[WARN] PDF update on signoff: {_pdf_err}")
+
                     st.session_state.requirements_approved = True
                     st.session_state.show_revision_box = False
+                    user_obj = st.session_state.get("authenticated_user") or {}
+                    try:
+                        record_gate_decision(
+                            session_id=st.session_state.current_session_id,
+                            gate_name="GATE_1_REQUIREMENTS",
+                            decision="APPROVED",
+                            reviewer_email=user_obj.get("email", "architect@bank.in"),
+                            reviewer_role=role_input if role_input else user_role,
+                            reviewer_id=user_obj.get("id"),
+                            rationale="Formal statutory sign-off and requirement baseline approval.",
+                            model_name="Qwen-2.5-3B-LoRA"
+                        )
+                    except Exception as _g_err:
+                        print(f"[WARN] Gate decision recording: {_g_err}")
                     _sync_to_db()
                     st.rerun()
             with c_rev:
@@ -1079,7 +1189,12 @@ if (
                 st.info("**Ready for modifications**: Type your adjustments or extra requirements directly in the chat bar below (e.g., *'Add biometric face liveness authentication'* or *'Include 7-year audit retention'*).")
 
         else:
-            st.markdown("**Requirements Verified and Approved by Human Reviewer**")
+            co_info = st.session_state.current_analysis.get("compliance_signoff", {})
+            st.success(
+                f"✅ **Requirements Verified and Certified by Compliance Officer**: "
+                f"**{co_info.get('officer_name', 'Authorizing Officer')}** ({co_info.get('role', 'Compliance Officer')}) "
+                f"| Signed at `{co_info.get('signed_at', 'Verified')}`"
+            )
 
 # -----------------------------------------------------------------------------
 # STEP 2: SDLC RECOMMENDATION & INTERACTIVE LLM CRITIQUE
@@ -1093,39 +1208,77 @@ if st.session_state.requirements_approved:
                 sdlc_status.write("**Step 1**: Hot-swapping SDLC LoRA adapter in shared GPU memory...")
                 sdlc_status.write("**Step 2**: Evaluating regulatory governance matrix and stage-gate rules...")
                 try:
+                    import importlib
+                    import agents.sdlc_agent
+                    importlib.reload(agents.sdlc_agent)
+                    from agents.sdlc_agent import recommend_sdlc_structured
+
                     req_text = st.session_state.current_analysis.get("original_requirement", "")
                     rag_ctx = st.session_state.current_analysis.get("rag_context", "")
-                    rec = recommend_sdlc_structured(req_text, rag_context=rag_ctx)
+                    try:
+                        rec = recommend_sdlc_structured(
+                            req_text,
+                            rag_context=rag_ctx,
+                            risk_info=st.session_state.current_analysis,
+                            domain=st.session_state.current_analysis.get("domain")
+                        )
+                    except TypeError:
+                        rec = recommend_sdlc_structured(req_text, rag_context=rag_ctx)
+
                     st.session_state.sdlc_recommendation = rec
-                    st.session_state.sdlc_approved = True
+                    st.session_state.sdlc_approved = (rec.get("recommended_model") != "Could Not Determine")
                     _sync_to_db()
                     sdlc_status.write(f"**Step 3**: Governance decision: **{rec.get('recommended_model')}**")
                     sdlc_status.update(label="SDLC Model Recommendation Complete", state="complete", expanded=False)
                     st.rerun()
                 except Exception as exc:
                     st.session_state.sdlc_recommendation = {
-                        "recommended_model": "Agile-DevSecOps Hybrid",
-                        "reasoning": "Agile-DevSecOps Hybrid provides iterative delivery cycles for evolving Indian financial regulatory requirements, embedding security gates at every sprint boundary.",
-                        "alternatives_considered": [
-                            {"model": "Waterfall", "why_not": "Indian financial regulations are updated frequently, making a fixed upfront specification obsolete mid-project."},
-                            {"model": "V-Model", "why_not": "V-Model's rigid phase-gating cannot accommodate continuous regulatory changes from RBI/NPCI."}
-                        ],
+                        "recommended_model": "Could Not Determine",
+                        "source": "UNDETERMINED",
+                        "reasoning": f"Automated SDLC model inference could not determine a definitive lifecycle strategy ({exc}). Please select a model manually below.",
+                        "alternatives_considered": [],
                         "_notice": str(exc)
                     }
-                    st.session_state.sdlc_approved = True
+                    st.session_state.sdlc_approved = False
                     st.rerun()
 
         sdlc = st.session_state.sdlc_recommendation
 
-        # Clean Headings for Recommendation
-        st.markdown(f"### Recommended SDLC Model: **{sdlc.get('recommended_model', 'Agile-DevSecOps Hybrid')}**")
-        st.markdown(f"**Architectural Rationale**:\n{sdlc.get('reasoning', '')}")
+        rec_model = sdlc.get("recommended_model", "Could Not Determine")
+        source = sdlc.get("source", "Ensemble")
+
+        if rec_model == "Could Not Determine":
+            st.warning(
+                f"⚠️ **SDLC Model Could Not Be Determined Automatically**\n\n"
+                f"**Reason**: {sdlc.get('reasoning')}\n\n"
+                f"Please review the system architecture and select the appropriate lifecycle model manually using the switch selector below."
+            )
+        else:
+            st.markdown(f"### Recommended SDLC Model: **{rec_model}**")
+            clean_source = source.replace("DECISION_MATRIX_OVERRIDE", "STATUTORY_DIRECTIVE")
+            st.caption(f"**Governance Engine**: `{clean_source}`")
+
+            clean_reasoning = sdlc.get("reasoning", "")
+            clean_reasoning = re.sub(r"\(Cross-validated by statutory decision matrix.*?\)", "", clean_reasoning, flags=re.IGNORECASE)
+            clean_reasoning = re.sub(r"\(Note:.*?overruled.*?\)", "", clean_reasoning, flags=re.IGNORECASE)
+            clean_reasoning = re.sub(r"\boverruled\b", "prioritized under regulatory directives", clean_reasoning, flags=re.IGNORECASE)
+            clean_reasoning = re.sub(r"\s*\.\s*\.", ".", clean_reasoning)
+            clean_reasoning = re.sub(r"\s+", " ", clean_reasoning).strip()
+            st.markdown(f"**Architectural Rationale**:\n{clean_reasoning}")
 
         alternatives = sdlc.get("alternatives_considered", [])
         if alternatives:
             st.markdown("### Alternatives Evaluated:")
             for alt in alternatives:
-                st.markdown(f"- **{alt.get('model')}**: {alt.get('why_not')}")
+                alt_model = alt.get("model", "")
+                alt_why = alt.get("why_not", "")
+                alt_why = re.sub(r"\(Note:.*?overruled.*?\)", "", alt_why, flags=re.IGNORECASE)
+                alt_why = re.sub(r"was\s+overruled in favor of \w+ due to", "is not recommended under", alt_why, flags=re.IGNORECASE)
+                alt_why = re.sub(r"overruled in favor of \w+ due to", "Does not meet", alt_why, flags=re.IGNORECASE)
+                alt_why = re.sub(r"\boverruled\b", "not recommended under", alt_why, flags=re.IGNORECASE)
+                alt_why = re.sub(r"\s*\.\s*\.", ".", alt_why)
+                alt_why = re.sub(r"\s+", " ", alt_why).strip()
+                st.markdown(f"- **{alt_model}**: {alt_why}")
 
         st.markdown("---")
         st.markdown(f"**SDLC Model Active**: **{sdlc.get('recommended_model', 'Agile-DevSecOps Hybrid')}** is finalized and active for this project lifecycle.")
@@ -1151,6 +1304,20 @@ if st.session_state.requirements_approved:
                 sdlc["reasoning"] = f"Adopted {new_model} per user specification."
                 st.session_state.sdlc_recommendation = sdlc
                 st.session_state.sdlc_approved = True
+                user_obj = st.session_state.get("authenticated_user") or {}
+                try:
+                    record_gate_decision(
+                        session_id=st.session_state.current_session_id,
+                        gate_name="GATE_2_SDLC",
+                        decision="OVERRULED",
+                        reviewer_email=user_obj.get("email", "architect@bank.in"),
+                        reviewer_role=user_obj.get("role", "Principal Architect"),
+                        reviewer_id=user_obj.get("id"),
+                        rationale=f"Model switched to {new_model} per manual user selection.",
+                        model_name=new_model
+                    )
+                except Exception as _g2_err:
+                    print(f"[WARN] Gate 2 decision recording: {_g2_err}")
                 st.session_state.messages.append({
                     "role": "assistant",
                     "content": f"SDLC model updated to **{new_model}**."

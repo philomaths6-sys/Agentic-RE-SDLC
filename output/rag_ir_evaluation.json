@@ -1,0 +1,154 @@
+{
+  "evaluation_timestamp": "2026-11-24 11:41:13 UTC",
+  "total_queries_evaluated": 12,
+  "hybrid_retriever_metrics": {
+    "recall@1": 0.75,
+    "recall@3": 0.8333,
+    "recall@5": 0.8333,
+    "recall@10": 0.8333,
+    "mrr": 0.7917,
+    "precision@3": 0.75
+  },
+  "dense_baseline_metrics": {
+    "recall@1": 0.5833,
+    "recall@3": 0.75,
+    "recall@5": 0.8333,
+    "recall@10": 0.8333,
+    "mrr": 0.6875,
+    "precision@3": 0.6389
+  },
+  "queries_detail": [
+    {
+      "query_id": "IR-01",
+      "domain": "Digital Payment Security",
+      "query": "Multi-factor authentication MFA, dynamic linking, and mobile app session security controls under RBI",
+      "hybrid_rr": 0.5,
+      "dense_rr": 0.25,
+      "hybrid_top_citation": "SEBI Cybersecurity & Cyber Resilience Framework (CSCRF) for Stock Brokers (2023-08-11), Clause 1.0 (Part 224) [ACTIVE]",
+      "dense_top_citation": "Regulatory Archive OWASP Application Security Verification Standard 4.0.3-en (2026), Clause 4.3.1 [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    },
+    {
+      "query_id": "IR-02",
+      "domain": "ATM Physical Security",
+      "query": "ATM cash cassette swap, vault door sensors, and physical tamper protection requirements",
+      "hybrid_rr": 1.0,
+      "dense_rr": 0.5,
+      "hybrid_top_citation": "RBI Security Measures for ATMs & Currency Chests (2019-04-11), Section (1. Physical Vault & Grouting S) [ACTIVE]",
+      "dense_top_citation": "Regulatory Archive ATM Switching Network Software Requirements Specification IEEE830 (2026), Clause 3.1 [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    },
+    {
+      "query_id": "IR-03",
+      "domain": "Aadhaar & Identity",
+      "query": "Aadhaar authentication submission of proposals, license keys, and Aadhaar Data Vault compliance",
+      "hybrid_rr": 1.0,
+      "dense_rr": 1.0,
+      "hybrid_top_citation": "UIDAI UIDAI Aadhaar Authentication & Data Vault Guidelines (2021-09-01), Clause 1.0 (Part 3) [ACTIVE]",
+      "dense_top_citation": "UIDAI UIDAI Aadhaar Authentication & Data Vault Guidelines (2021-09-01), Clause 1.0 (Part 5) [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    },
+    {
+      "query_id": "IR-04",
+      "domain": "Capital Markets SOC",
+      "query": "SEBI Cybersecurity and Cyber Resilience Framework CSCRF guidelines for SOC monitoring, VAPT, and cyber incidents",
+      "hybrid_rr": 1.0,
+      "dense_rr": 1.0,
+      "hybrid_top_citation": "SEBI Cybersecurity & Cyber Resilience Framework (CSCRF) for Stock Brokers (2023-08-11), Clause 1.0 (Part 19) [ACTIVE]",
+      "dense_top_citation": "SEBI Cybersecurity & Cyber Resilience Framework (CSCRF) for Stock Brokers (2023-08-11), Clause 1.0 (Part 46) [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    },
+    {
+      "query_id": "IR-05",
+      "domain": "DPDP Data Protection",
+      "query": "Digital Personal Data Protection Act DPDP notice requirements, consent manager, and Data Principal rights",
+      "hybrid_rr": 1.0,
+      "dense_rr": 1.0,
+      "hybrid_top_citation": "MeitY Digital Personal Data Protection Act, 2023 (2023-08-11), Section ((2) Where a Data Principal has) [ACTIVE]",
+      "dense_top_citation": "MeitY Digital Personal Data Protection Rules, 2025 (2025-01-03), Section ((c) Sharing of her personal da) (Part 1) [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    },
+    {
+      "query_id": "IR-06",
+      "domain": "DPDP Implementation",
+      "query": "DPDP Implementation Rules 2025 procedural compliance for data fiduciary and child consent",
+      "hybrid_rr": 1.0,
+      "dense_rr": 1.0,
+      "hybrid_top_citation": "MeitY Digital Personal Data Protection Rules, 2025 (2025-01-03), Section ((3) Without prejudice to sub-r) (Part 2) [ACTIVE]",
+      "dense_top_citation": "MeitY Digital Personal Data Protection Rules, 2025 (2025-01-03), Section ((3) Without prejudice to sub-r) (Part 2) [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    },
+    {
+      "query_id": "IR-07",
+      "domain": "KYC & Anti-Money Laundering",
+      "query": "RBI Master Direction KYC customer identification procedure CIP, periodic update, and PEP due diligence",
+      "hybrid_rr": 1.0,
+      "dense_rr": 1.0,
+      "hybrid_top_citation": "RBI Master Direction - Know Your Customer (KYC) Direction, 2016 (2023-07-07), Clause 1.0 (Part 1) [ACTIVE]",
+      "dense_top_citation": "RBI Master Direction - Know Your Customer (KYC) Direction, 2016 (2023-07-07), Clause 1.0 (Part 1) [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    },
+    {
+      "query_id": "IR-08",
+      "domain": "AML / PMLA Reporting",
+      "query": "PMLA 2002 prevention of money laundering, maintenance of records, and suspicious transaction reporting STR to FIU",
+      "hybrid_rr": 1.0,
+      "dense_rr": 1.0,
+      "hybrid_top_citation": "FIU-IND Prevention of Money Laundering Act & Reporting Directives (2002-07-01), Clause 1.0 (Part 1) [ACTIVE]",
+      "dense_top_citation": "FIU-IND Prevention of Money Laundering Act & Reporting Directives (2002-07-01), Clause 1.0 (Part 1) [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    },
+    {
+      "query_id": "IR-09",
+      "domain": "UPI Payments",
+      "query": "BHIM UPI guidelines, transaction processing, and UPI ecosystem participant operating regulations",
+      "hybrid_rr": 1.0,
+      "dense_rr": 0.5,
+      "hybrid_top_citation": "NPCI BHIM UPI Operating Guidelines & Architecture Norms (2026-01-15), Section Topic (Part 1) [ACTIVE]",
+      "dense_top_citation": "Regulatory Archive UPI AutoPay Recurring Mandate Platform SRS IEEE830 (2026), Clause 1.0 (Part 1) [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    },
+    {
+      "query_id": "IR-10",
+      "domain": "UPI Tap & Pay POS",
+      "query": "Enhancement of UPI Tap and Pay on Point of Sale POS terminals with contactless NFC reader specifications",
+      "hybrid_rr": 1.0,
+      "dense_rr": 1.0,
+      "hybrid_top_citation": "NPCI BHIM UPI Operating Guidelines & Architecture Norms (2026-01-15), Section Topic (Part 32) [ACTIVE]",
+      "dense_top_citation": "NPCI BHIM UPI Operating Guidelines & Architecture Norms (2026-01-15), Section Topic (Part 32) [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    },
+    {
+      "query_id": "IR-11",
+      "domain": "UPI Conversational AI",
+      "query": "MyUPI AI-powered conversational support for UPI payments and UPI Help 2.0 automated dispute resolution",
+      "hybrid_rr": 0.0,
+      "dense_rr": 0.0,
+      "hybrid_top_citation": "Regulatory Archive UPI AutoPay Recurring Mandate Platform SRS IEEE830 (2026), Clause 1.0 (Part 1) [ACTIVE]",
+      "dense_top_citation": "Regulatory Archive UPI AutoPay Recurring Mandate Platform SRS IEEE830 (2026), Clause 1.0 (Part 1) [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    },
+    {
+      "query_id": "IR-12",
+      "domain": "Numeric UPI ID",
+      "query": "Addendum on numeric UPI ID routing, mapper database, and alphanumeric virtual payment address VPA resolution",
+      "hybrid_rr": 0.0,
+      "dense_rr": 0.0,
+      "hybrid_top_citation": "NPCI BHIM UPI Operating Guidelines & Architecture Norms (2026-01-15), Section Topic (Part 8) [ACTIVE]",
+      "dense_top_citation": "Regulatory Archive UPI AutoPay Recurring Mandate Platform SRS IEEE830 (2026), Clause 1.0 (Part 1) [ACTIVE]",
+      "hybrid_retrieved_count": 10,
+      "dense_retrieved_count": 10
+    }
+  ]
+}
