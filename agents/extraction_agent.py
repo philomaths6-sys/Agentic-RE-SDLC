@@ -303,7 +303,7 @@ Generate exactly {p_count} distinct specifications for this pillar as a valid JS
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
-            max_new_tokens=720,
+            max_new_tokens=900,
             do_sample=False,
             repetition_penalty=1.1,
             pad_token_id=tokenizer.eos_token_id,
@@ -338,23 +338,6 @@ Generate exactly {p_count} distinct specifications for this pillar as a valid JS
             "acceptance_criteria": crit,
             "source": "LLM_SYNTHESIZED"
         })
-
-    # Ensure full coverage of p_count (5) items per pillar
-    if len(valid_items) < p_count:
-        focus_topics = [f.strip() for f in p_focus.split(",") if f.strip()]
-        while len(valid_items) < p_count:
-            idx = len(valid_items)
-            topic = focus_topics[idx % len(focus_topics)] if focus_topics else f"{p_name} Protocol"
-            valid_items.append({
-                "id": f"{p_prefix}-{idx+1:02d}",
-                "title": f"{p_name}: {topic.title()} Implementation",
-                "category": p_name,
-                "description": f"Enforce production-grade architecture controls for {topic} within {project_title}, conforming strictly to Indian financial regulations.",
-                "priority": "Must Have" if idx < 3 else "Should Have",
-                "regulation": f"{domain.title()} Statutory Directives & RBI/SEBI Guidelines",
-                "acceptance_criteria": f"Passes automated verification test harness for {topic} with zero defect tolerance and SLA compliance.",
-                "source": "LLM_SYNTHESIZED"
-            })
 
     return valid_items
 
@@ -392,24 +375,6 @@ def extract_system_architecture(user_input: str, rag_context: str = "", step_cal
             tokenizer=tokenizer,
             model=model
         )
-
-        # Guarantee at least 5 specifications per pillar dynamically
-        while len(pillar_reqs) < 5:
-            p_prefix = pillar["prefix"]
-            p_name = pillar["name"]
-            curr_num = len(pillar_reqs) + 1
-            focus_words = [w.strip() for w in pillar["focus"].split(",") if len(w.strip()) > 3]
-            kw = focus_words[curr_num % len(focus_words)].title()
-            pillar_reqs.append({
-                "id": f"{p_prefix}-{curr_num:02d}",
-                "title": f"{kw} Architecture Control",
-                "category": p_name,
-                "description": f"Enforce production-grade {kw.lower()} controls for {project_title} complying with Indian statutory directives.",
-                "priority": "Must Have" if curr_num <= 3 else "Should Have",
-                "regulation": f"{domain} Statutory Compliance Directives",
-                "acceptance_criteria": f"Automated test validation passes for {kw.lower()}, achieving 100% compliance and zero defect rate.",
-                "source": "LLM_SYNTHESIZED"
-            })
 
         all_requirements.extend(pillar_reqs)
 

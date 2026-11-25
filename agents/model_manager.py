@@ -6,6 +6,7 @@ Supports hot-swapping and attaching both Extraction and SDLC LoRA adapters on de
 
 import os
 import torch
+import safe_io
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
 

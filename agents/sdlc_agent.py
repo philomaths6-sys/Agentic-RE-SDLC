@@ -17,6 +17,11 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
 from guardrails.input_filter import is_safe as input_is_safe
 from guardrails.output_filter import filter_output
+from workflow.graph_orchestrator import (
+    _detect_financial_domain,
+    get_domain_category,
+    get_domain_statutory,
+)
 
 from agents.model_manager import get_sdlc_model
 
@@ -33,7 +38,7 @@ def _models_agree(m1: str, m2: str) -> bool:
         {"v model", "v model with devsecops gates", "vmodel", "v model with devsecops"},
         {"waterfall", "waterfall staged gate", "staged gate", "waterfall / staged gate", "waterfall / staged-gate", "waterfall / stage gate", "waterfall / stage-gate"},
         {"agile devsecops hybrid", "agile devsecops", "agile", "dual track agile", "agile devops", "extreme programming", "xp"},
-        {"prototyping model", "prototyping", "iterative model", "iterative", "prototyping / iterative", "prototyping model / iterative pilot"},
+        {"prototyping model", "prototyping", "iterative model", "iterative", "prototyping / iterative", "prototyping model / iterative pilot", "rad", "rapid application development"},
         {"spiral model", "spiral"},
         {"incremental model", "incremental", "incremental / staged"},
         {"rad", "rapid application development"}
@@ -340,16 +345,16 @@ def recommend_sdlc_structured(
             "decision_factors": matrix_res.get("decision_factors", {})
         }
 
-    # Step 2: Query Fine-Tuned SDLC LoRA Model
+    # Step 2: Query Fine-Tuned SDLC LoRA Model as Primary Predictor
     llm_res = None
     llm_err = None
     try:
         tokenizer, model = get_sdlc_model()
 
         system_prompt = (
-            "You are the SDLC Recommendation Agent for Indian financial institutions regulated by RBI, NPCI, UIDAI, SEBI, and DPDP Act 2023. "
-            "Analyze the given requirement and recommend the optimal SDLC model. "
-            "Explain WHY this model fits and list alternatives you considered but rejected with clear reasons. "
+            "You are the SDLC Recommendation Agent for Indian financial institutions. "
+            "Analyze the requirement and output a JSON with: recommended_model (SDLC model name), "
+            "reasoning (why this model fits), and alternatives_considered (list of rejected models with why_not explanation). "
             "Output ONLY valid JSON."
         )
 
@@ -365,21 +370,33 @@ def recommend_sdlc_structured(
             pass
 
         combined_rag = f"{rag_context}\n\n{sdlc_context}".strip()
-        rag_section = f"\n\nApplicable Regulatory & SDLC Governance Directives:\n{combined_rag[:1200]}" if combined_rag else ""
 
-        user_prompt = f"""Analyze this requirement and recommend the best SDLC model. Explain your reasoning and why you rejected alternatives:
+        # Contextual domain and statutory alignment matching canonical catalog
+        detected_domain = domain if (domain and domain != "general") else _detect_financial_domain(requirement)
+        domain_label = get_domain_category(detected_domain)
+        statutory_context = get_domain_statutory(detected_domain) if detected_domain != "general" else ""
 
-Requirement:
-\"{requirement[:2000]}\"
-{rag_section}
+        reg_framework = statutory_context if statutory_context else (
+            combined_rag[:400] if combined_rag
+            else "RBI Cyber Security Framework, NPCI Guidelines, SEBI Regulations, DPDP Act 2023"
+        )
+
+        user_prompt = f"""Recommend an optimal Software Development Life Cycle model and stage-gate workflow complying with RBI Cyber Security and DevSecOps guidelines:
+
+Requirement Statement:
+\"{requirement[:1800]}\"
+Categories: {domain_label}
+Regulatory Framework: {reg_framework}
+
+Available SDLC Methodologies: Agile-DevSecOps Hybrid, V-Model with DevSecOps Gates, Waterfall / Staged-Gate, Prototyping Model / Iterative Pilot, Spiral Model, RAD (Rapid Application Development).
 
 Output ONLY valid JSON in this exact structure:
 {{
-  "recommended_model": "Model Name (e.g., Agile-DevSecOps Hybrid / V-Model / V-Model with DevSecOps Gates / Waterfall / Prototyping Model / Iterative Model / Spiral Model / RAD / Incremental Model / Dual-Track Agile)",
-  "reasoning": "Detailed explanation of why this SDLC model is the best fit for this specific requirement.",
+  "recommended_model": "<Selected SDLC Model Name>",
+  "reasoning": "<Detailed explanation of why this SDLC model is the best fit for this specific requirement>",
   "alternatives_considered": [
-    {{"model": "Alternative Model 1", "why_not": "Why this alternative was rejected."}},
-    {{"model": "Alternative Model 2", "why_not": "Why this alternative was rejected."}}
+    {{"model": "<Alternative Model 1>", "why_not": "<Why this alternative was rejected>"}},
+    {{"model": "<Alternative Model 2>", "why_not": "<Why this alternative was rejected>"}}
   ]
 }}"""
 
@@ -389,7 +406,7 @@ Output ONLY valid JSON in this exact structure:
         ]
 
         prompt_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        inputs = tokenizer(prompt_text, return_tensors="pt").to("cuda")
+        inputs = tokenizer(prompt_text, return_tensors="pt").to(model.device)
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -397,7 +414,7 @@ Output ONLY valid JSON in this exact structure:
         with torch.no_grad():
             outputs = model.generate(
                 **inputs,
-                max_new_tokens=500,
+                max_new_tokens=450,
                 do_sample=False,
                 repetition_penalty=1.15,
                 pad_token_id=tokenizer.eos_token_id,
@@ -416,38 +433,22 @@ Output ONLY valid JSON in this exact structure:
     except Exception as exc:
         llm_err = str(exc)
 
-    # Step 3: Calibrated Ensemble Synthesis
+    # Step 3: Pure Autonomous Model Prediction (No Rule-Based Override)
     if llm_res and llm_res.get("recommended_model") not in [None, "", "Could Not Determine"]:
-        llm_model = llm_res["recommended_model"]
+        final_model = llm_res["recommended_model"]
+        reasoning = str(llm_res.get("reasoning", "")).strip()
+        alternatives = llm_res.get("alternatives_considered", [])
 
-        # Case A: Matrix and LLM Agree
-        if _models_agree(matrix_model, llm_model):
-            final_model = matrix_model
-            calibrated_conf = min(0.98, max(matrix_conf, 0.88) + 0.05)
-            source = f"ENSEMBLE ({matrix_res.get('rule_id')} + LoRA Agreement)"
-            reasoning = str(llm_res.get('reasoning', '')).strip()
-            alternatives = llm_res.get("alternatives_considered") or matrix_res.get("matrix_alternatives", [])
-        # Case B: Divergence - check hard constraints
+        # Validate against statutory matrix to calibrate confidence
+        if _models_agree(matrix_model, final_model):
+            calibrated_conf = min(0.98, max(matrix_conf, 0.90) + 0.04)
+            source = f"FINE_TUNED_SDLC_LORA_MODEL (Statutory Matrix Confirmed: {matrix_res.get('rule_id', 'Direct')})"
         else:
-            if matrix_conf >= 0.90:
-                final_model = matrix_model
-                calibrated_conf = round(matrix_conf * 0.92, 2)
-                source = f"STATUTORY_DIRECTIVE ({matrix_res.get('rule_id')})"
-                reasoning = (
-                    f"Statutory architectural constraints mandate {matrix_model}: {matrix_res.get('matrix_reasoning')}"
-                )
-                alternatives = [
-                    {"model": llm_model, "why_not": f"Does not fulfill physical or statutory verification gates required under {matrix_res.get('rule_id')}."}
-                ] + [alt for alt in matrix_res.get("matrix_alternatives", []) if alt.get("model") != llm_model]
-            else:
-                final_model = llm_model
-                calibrated_conf = round(max(0.68, matrix_conf * 0.80), 2)
-                source = "LLM_PRIMARY_WITH_MATRIX_FEEDBACK"
-                reasoning = llm_res.get("reasoning", "")
-                alternatives = llm_res.get("alternatives_considered", [])
+            calibrated_conf = 0.92
+            source = "FINE_TUNED_SDLC_LORA_MODEL"
 
     elif matrix_model and matrix_model != "Could Not Determine":
-        # Case C: LLM Unreachable or Parse Failure -> Transparent Fallback to Decision Matrix
+        # Fallback ONLY if fine-tuned model generation failed
         final_model = matrix_model
         calibrated_conf = round(matrix_conf * 0.88, 2)
         source = f"DECISION_MATRIX_FALLBACK ({matrix_res.get('rule_id')})"
@@ -458,7 +459,7 @@ Output ONLY valid JSON in this exact structure:
         alternatives = matrix_res.get("matrix_alternatives", [])
 
     else:
-        # Case D: Both Undetermined -> Explicit Non-Silent Failure
+        # Both Undetermined -> Explicit Non-Silent Failure
         final_model = "Could Not Determine"
         calibrated_conf = 0.0
         source = "UNDETERMINED"

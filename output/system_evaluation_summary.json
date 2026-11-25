@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-25 03:37:50",
+  "timestamp": "2026-11-25 04:44:04",
   "scenarios": [
     {
       "id": "TC-ATM-01",
@@ -19,8 +19,8 @@
       "recommended_sdlc": "V-Model with DevSecOps Gates",
       "sdlc_pass": true,
       "pdf_pass": true,
-      "analysis_time_sec": 180.3,
-      "sdlc_time_sec": 8.99
+      "analysis_time_sec": 209.88,
+      "sdlc_time_sec": 9.03
     },
     {
       "id": "TC-UPI-02",
@@ -40,8 +40,8 @@
       "recommended_sdlc": "Agile-DevSecOps Hybrid",
       "sdlc_pass": true,
       "pdf_pass": true,
-      "analysis_time_sec": 207.71,
-      "sdlc_time_sec": 11.47
+      "analysis_time_sec": 209.39,
+      "sdlc_time_sec": 9.17
     },
     {
       "id": "TC-TRD-03",
@@ -61,8 +61,8 @@
       "recommended_sdlc": "V-Model with DevSecOps Gates",
       "sdlc_pass": true,
       "pdf_pass": true,
-      "analysis_time_sec": 204.0,
-      "sdlc_time_sec": 10.07
+      "analysis_time_sec": 208.21,
+      "sdlc_time_sec": 10.16
     },
     {
       "id": "TC-SBX-04",
@@ -82,8 +82,8 @@
       "recommended_sdlc": "Prototyping Model",
       "sdlc_pass": true,
       "pdf_pass": true,
-      "analysis_time_sec": 197.82,
-      "sdlc_time_sec": 17.16
+      "analysis_time_sec": 185.2,
+      "sdlc_time_sec": 13.69
     }
   ],
   "conversational_accuracy": 100.0,
