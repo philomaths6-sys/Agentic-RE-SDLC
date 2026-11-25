@@ -12,6 +12,7 @@ Built with ReportLab, producing a multi-page executive document with:
 
 import os
 import io
+import re
 import html
 import hashlib
 import datetime
@@ -177,7 +178,7 @@ def _build_pdf_story(analysis_data: Dict[str, Any], include_anchor_links: bool =
 
     # Pre-collect passages from catalog and requirements_list
     passages_catalog = analysis_data.get("passages_catalog", {})
-    collected_passages = []
+    raw_passages = []
     seen_req_passages = set()
 
     if passages_catalog and isinstance(passages_catalog, dict):
@@ -186,7 +187,7 @@ def _build_pdf_story(analysis_data: Dict[str, Any], include_anchor_links: bool =
                 r_id = val.get("req_id") or anchor_key.replace("SEC-", "")
                 if r_id and r_id not in seen_req_passages:
                     seen_req_passages.add(r_id)
-                    collected_passages.append({
+                    raw_passages.append({
                         "req_id": r_id,
                         "citation": val.get("citation", "Regulatory Directive"),
                         "issuer": val.get("issuer", "Statutory Authority"),
@@ -200,7 +201,7 @@ def _build_pdf_story(analysis_data: Dict[str, Any], include_anchor_links: bool =
                         r_id = p.get("req_id") or anchor_key.replace("SEC-", "")
                         if r_id and r_id not in seen_req_passages:
                             seen_req_passages.add(r_id)
-                            collected_passages.append({
+                            raw_passages.append({
                                 "req_id": r_id,
                                 "citation": p.get("citation", "Regulatory Directive"),
                                 "issuer": p.get("issuer", "Statutory Authority"),
@@ -213,7 +214,7 @@ def _build_pdf_story(analysis_data: Dict[str, Any], include_anchor_links: bool =
         r_id = r.get("id", "")
         if r_id and r.get("statutory_passage") and (r_id not in seen_req_passages):
             seen_req_passages.add(r_id)
-            collected_passages.append({
+            raw_passages.append({
                 "req_id": r_id,
                 "citation": r.get("statutory_citation") or r.get("regulation", "Statutory Clause"),
                 "issuer": r.get("issuer", "RBI/NPCI"),
@@ -222,9 +223,28 @@ def _build_pdf_story(analysis_data: Dict[str, Any], include_anchor_links: bool =
                 "text": r.get("statutory_passage", "")
             })
 
-    # Limit to top 30 representative passages for Section 6
-    rendered_passages = collected_passages[:30]
-    valid_anchor_req_ids = {p["req_id"] for p in rendered_passages}
+    # Group passages by normalized text snippet so identical passages are NEVER displayed redundantly
+    passage_groups: Dict[str, Dict[str, Any]] = {}
+    for p in raw_passages:
+        raw_text = p.get("text", "").strip()
+        if not raw_text:
+            continue
+        norm_key = re.sub(r"\s+", " ", raw_text[:120].lower())
+        if norm_key not in passage_groups:
+            passage_groups[norm_key] = {
+                "req_ids": [p["req_id"]],
+                "citation": p.get("citation", "Regulatory Directive"),
+                "issuer": p.get("issuer", "Statutory Authority"),
+                "date": p.get("date", "Active"),
+                "status": p.get("status", "ACTIVE"),
+                "text": raw_text
+            }
+        else:
+            if p["req_id"] not in passage_groups[norm_key]["req_ids"]:
+                passage_groups[norm_key]["req_ids"].append(p["req_id"])
+
+    rendered_passages = list(passage_groups.values())[:30]
+    valid_anchor_req_ids = {rid for p in rendered_passages for rid in p["req_ids"]}
 
     story = []
 
@@ -498,8 +518,8 @@ def _build_pdf_story(analysis_data: Dict[str, Any], include_anchor_links: bool =
             ]
         ]
         for p in rendered_passages:
-            r_id = p["req_id"]
-            anchor_html = f"<a name='passage_{r_id}'/><b>{r_id}</b>"
+            req_ids_list = p["req_ids"]
+            anchor_html = ", ".join([f"<a name='passage_{rid}'/><b>{rid}</b>" for rid in req_ids_list])
             status_color = "#047857" if p.get("status") == "ACTIVE" else "#B91C1C"
             meta_html = (
                 f"<b>{p.get('citation')}</b><br/>"

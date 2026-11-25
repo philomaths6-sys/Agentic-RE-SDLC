@@ -365,7 +365,7 @@ def retrieval_node(state: WorkflowState) -> Dict[str, Any]:
     rag_contexts = []
     rag_context_str = ""
     try:
-        rag_contexts = retrieve(effective_text, top_k=4)
+        rag_contexts = retrieve(effective_text, top_k=12)
         rag_context_str = "\n\n".join([
             f"[{c.get('citation', 'Regulatory KB')}]:\n{c.get('text', '').strip()[:450]}"
             for c in rag_contexts if c.get("text")
